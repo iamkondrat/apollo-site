@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>АПОΛΛО — ПИЛОМАТЕРІАЛИ | Суха та необрізна дошка • Київ, Дніпровська набережна 17е</title>
+  <meta name="description" content="АПОЛЛО — один з найбільших складів пиломатеріалів в Україні. Необрізна та суха дошка, брус струганий, терасна дошка, вагонка, дошка підлоги. Київ, Дніпровська набережна, 17е." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Montserrat:wght@700;800;900&family=Unbounded:wght@700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            slateDeep: '#1A2226',
+            slateDarker: '#13191C',
+            slateCard: '#1F292E',
+            warmCream: '#F3EDE2',
+            warmSand: '#E8E0D2',
+            apolloBronze: '#A86A38',
+            apolloBronzeLight: '#B8763E',
+            timberGold: '#E0A14A',
+            timberAmber: '#CCA052',
+          },
+          fontFamily: {
+            display: ['Unbounded', 'Montserrat', 'sans-serif'],
+            heading: ['Montserrat', 'sans-serif'],
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Three.js r128 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <!-- GSAP 3 + ScrollTrigger -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <!-- Lenis Smooth Scroll -->
+  <script src="https://unpkg.com/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+  <style>
+    :root {
+      --bg-deep: #1A2226;
+      --bg-darker: #13191C;
+      --cream: #F3EDE2;
+      --sand: #E8E0D2;
+      --bronze: #A86A38;
+      --gold: #E0A14A;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      background-color: var(--bg-deep);
+      color: #FFFFFF;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+      selection-background-color: #A86A38;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: #A86A38;
+      color: #FFFFFF;
+    }
+
+    /* Fixed 3D WebGL Canvas */
+    #webgl-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* Subtle Atmospheric Vignette & Architectural Grid */
+    .vignette-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 65% 50%, rgba(26, 34, 38, 0.15) 0%, rgba(19, 25, 28, 0.86) 85%),
+        linear-gradient(180deg, rgba(19, 25, 28, 0.75) 0%, rgba(26, 34, 38, 0.1) 25%, rgba(26, 34, 38, 0.2) 75%, rgba(19, 25, 28, 0.92) 100%);
+    }
+
+    .blueprint-grid {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background-size: 64px 64px;
+      background-image: 
+        linear-gradient(to right, rgba(243, 237, 226, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(243, 237, 226, 0.03) 1px, transparent 1px);
+    }
+
+    /* Main Content Layer above WebGL */
+    main {
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Glass & Surface styling */
+    .apollo-glass {
+      background: rgba(26, 34, 38, 0.78);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(243, 237, 226, 0.12);
+    }
+
+    .apollo-glass-heavy {
+      background: rgba(19, 25, 28, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(168, 106, 56, 0.35);
+    }
+
+    .apollo-card-banner {
+      background: rgba(26, 34, 38, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(243, 237, 226, 0.14);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .apollo-card-banner:hover {
+      transform: translateY(-6px);
+      border-color: #E0A14A;
+      box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.65), 0 0 25px rgba(224, 161, 74, 0.18);
+    }
+
+    .apollo-card-banner:hover .banner-cream-footer {
+      background-color: #E0A14A;
+      color: #13191C;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #13191C;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #A86A38;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #E0A14A;
+    }
+
+    /* Custom Button Hover Effects */
+    .btn-bronze {
+      background: linear-gradient(135deg, #A86A38 0%, #B8763E 100%);
+      color: #FFFFFF;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 25px -5px rgba(168, 106, 56, 0.45);
+    }
+    .btn-bronze:hover {
+      background: linear-gradient(135deg, #B8763E 0%, #E0A14A 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 16px 32px -6px rgba(224, 161, 74, 0.55);
+    }
+
+    .btn-cream {
+      background-color: #F3EDE2;
+      color: #1A2226;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-cream:hover {
+      background-color: #E0A14A;
+      color: #13191C;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px -6px rgba(224, 161, 74, 0.4);
+    }
+
+    /* Active Species Pill */
+    .species-btn.active {
+      background-color: #F3EDE2;
+      color: #1A2226;
+      border-color: #E0A14A;
+      box-shadow: 0 0 24px rgba(224, 161, 74, 0.35);
+    }
+
+    /* Modal Transition */
+    #price-modal {
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+    }
+    #price-modal.hidden-modal {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #price-modal.visible-modal {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+
+    /* Animated pulse for laser status */
+    @keyframes pulseGold {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.45; transform: scale(0.92); }
+    }
+    .pulse-dot {
+      animation: pulseGold 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="antialiased selection:bg-apolloBronze selection:text-white">
+
+  <!-- 3D WEBGL FIXED SCENE -->
+  <div id="webgl-container" aria-hidden="true"></div>
+  <div class="vignette-overlay" aria-hidden="true"></div>
+  <div class="blueprint-grid" aria-hidden="true"></div>
+
+  <!-- FIXED HUD TELEMETRY BAR (BOTTOM LEFT & RIGHT) -->
+  <div class="fixed bottom-5 left-6 z-30 hidden lg:flex items-center gap-4 apollo-glass px-4 py-2.5 rounded-lg border border-warmCream/15 text-xs font-mono">
+    <div class="flex items-center gap-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-timberGold pulse-dot"></span>
+      <span class="text-warmCream/60" data-i18n="hud_scanner">ЛАЗЕРНИЙ КОНТРОЛЬ ПАРТІЇ:</span>
+    </div>
+    <div class="h-3.5 w-[1px] bg-warmCream/15"></div>
+    <div>
+      <span class="text-warmCream/50" data-i18n="hud_species_label">ПОРОДА:</span>
+      <span id="hud-species-val" class="text-timberGold font-bold ml-1">ДУБ (QUERCUS)</span>
+    </div>
+    <div class="h-3.5 w-[1px] bg-warmCream/15"></div>
+    <div>
+      <span class="text-warmCream/50" data-i18n="hud_moisture_label">ВОЛОГІСТЬ:</span>
+      <span id="hud-moisture-val" class="text-warmCream font-semibold ml-1">8.4% (КАМЕРНА)</span>
+    </div>
+    <div class="h-3.5 w-[1px] bg-warmCream/15"></div>
+    <div>
+      <span class="text-warmCream/50" data-i18n="hud_thickness_label">ПЕРЕРІЗ:</span>
+      <span id="hud-dim-val" class="text-warmCream font-semibold ml-1">50 × 320 × 4500 ММ</span>
+    </div>
+  </div>
+
+  <!-- FLOATING SCROLL PROGRESS & QUICK CALL (BOTTOM RIGHT) -->
+  <div class="fixed bottom-5 right-6 z-30 flex items-center gap-3">
+    <button onclick="openPriceModal()" class="apollo-glass hover:border-timberGold text-warmCream px-4 py-2.5 rounded-lg font-mono text-xs uppercase tracking-wider flex items-center gap-2 transition-all shadow-lg">
+      <span class="text-timberGold">▤</span>
+      <span data-i18n="hud_calc_btn">КАЛЬКУЛЯТОР М³</span>
+    </button>
+    <a href="tel:+380685386923" class="btn-bronze px-4 py-2.5 rounded-lg font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg">
+      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M6.62 10.79a15.053 15.053 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1C10.61 21 3 13.39 3 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.59a1 1 0 01-.25 1.01l-2.2 2.19z"/></svg>
+      <span>068 538 69 23</span>
+    </a>
+  </div>
+
+  <!-- TOP NAVIGATION BAR (STYLIZED STRICTLY AFTER APOLLO BRANDING) -->
+  <header class="fixed top-0 left-0 right-0 z-40 apollo-glass border-b border-warmCream/10">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      
+      <!-- BRAND SVG LOGO: АПОΛΛО — ПИЛОМАТЕРІАЛИ -->
+      <a href="#hero" class="flex items-center gap-3.5 group focus:outline-none">
+        <!-- Custom 3D Timber Beam "A" Emblem -->
+        <svg class="w-12 h-12 sm:w-14 sm:h-14 shrink-0 transition-transform duration-300 group-hover:scale-105" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Background shield subtle glow -->
+          <rect x="4" y="4" width="92" height="92" rx="14" fill="#13191C" stroke="#A86A38" stroke-width="2"/>
+          <!-- Main Left Diagonal Timber Beam -->
+          <polygon points="46,14 58,14 28,84 16,84" fill="#A86A38"/>
+          <polygon points="58,14 64,18 34,88 28,84" fill="#7D4C25"/>
+          <!-- End-grain bottom of left beam -->
+          <polygon points="16,84 28,84 34,88 22,88" fill="#E0A14A" stroke="#13191C" stroke-width="0.8"/>
+
+          <!-- Right Parallel Diagonal Beam 1 (Outer) -->
+          <polygon points="52,22 62,22 84,78 74,78" fill="#B8763E"/>
+          <polygon points="74,78 84,78 81,84 71,84" fill="#E0A14A" stroke="#13191C" stroke-width="0.8"/>
+
+          <!-- Right Parallel Diagonal Beam 2 (Middle) -->
+          <polygon points="46,36 55,36 72,80 63,80" fill="#A86A38"/>
+          <polygon points="63,80 72,80 69,86 60,86" fill="#E0A14A" stroke="#13191C" stroke-width="0.8"/>
+
+          <!-- Right Parallel Diagonal Beam 3 (Inner crossbar accent) -->
+          <polygon points="40,50 49,50 60,82 51,82" fill="#8F582E"/>
+          <polygon points="51,82 60,82 57,88 48,88" fill="#E0A14A" stroke="#13191C" stroke-width="0.8"/>
+        </svg>
+
+        <!-- Geometric Brand Typography -->
+        <div class="flex flex-col">
+          <div class="font-heading font-black text-xl sm:text-2xl tracking-[0.26em] text-white leading-none flex items-center">
+            <span>АПО</span><span class="text-timberGold">ΛΛ</span><span>О</span>
+          </div>
+          <div class="flex items-center gap-1.5 mt-1.5">
+            <span class="h-[1px] w-3 sm:w-5 bg-apolloBronze"></span>
+            <span class="font-heading font-bold text-[9px] sm:text-[10px] tracking-[0.3em] text-warmCream uppercase" data-i18n="logo_sub">ПИЛОМАТЕРІАЛИ</span>
+            <span class="h-[1px] w-3 sm:w-5 bg-apolloBronze"></span>
+          </div>
+        </div>
+      </a>
+
+      <!-- DESKTOP NAV LINKS -->
+      <nav class="hidden xl:flex items-center gap-7 text-xs font-heading font-bold uppercase tracking-widest text-warmCream/80">
+        <a href="#exploded" class="hover:text-timberGold transition-colors" data-i18n="nav_quality">Якість та сушка</a>
+        <a href="#catalog" class="hover:text-timberGold transition-colors" data-i18n="nav_catalog">Асортимент</a>
+        <a href="#warehouse" class="hover:text-timberGold transition-colors" data-i18n="nav_warehouse">Склад у Києві</a>
+        <a href="#contacts" class="hover:text-timberGold transition-colors" data-i18n="nav_contacts">Контакти</a>
+      </nav>
+
+      <!-- RIGHT ACTIONS: PHONES, LANG SWITCHER & PRICE CTA -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <!-- Direct Warehouse Phones + Address Pill -->
+        <div class="hidden md:flex flex-col items-end text-right font-mono">
+          <div class="flex items-center gap-3 text-xs font-bold text-warmCream">
+            <a href="tel:+380960000076" class="hover:text-timberGold transition-colors">096 000 00 76</a>
+            <span class="text-apolloBronze">•</span>
+            <a href="tel:+380685386923" class="hover:text-timberGold transition-colors">068 538 69 23</a>
+          </div>
+          <span class="text-[10px] text-warmCream/65 tracking-wider" data-i18n="nav_address">м. Київ, Дніпровська набережна, 17е</span>
+        </div>
+
+        <!-- Language Switcher: UA | RU | EN -->
+        <div class="flex items-center bg-slateDarker/90 p-1 rounded-lg border border-warmCream/15 font-mono text-xs">
+          <button onclick="setLanguage('ua')" id="lang-ua" class="px-2 py-1 rounded font-bold transition-colors bg-apolloBronze text-white">UA</button>
+          <button onclick="setLanguage('ru')" id="lang-ru" class="px-2 py-1 rounded font-bold transition-colors text-warmCream/60 hover:text-white">RU</button>
+          <button onclick="setLanguage('en')" id="lang-en" class="px-2 py-1 rounded font-bold transition-colors text-warmCream/60 hover:text-white">EN</button>
+        </div>
+
+        <!-- Price List Modal Trigger -->
+        <button onclick="openPriceModal()" class="btn-bronze px-4 sm:px-5 py-2.5 rounded-lg font-heading font-extrabold text-xs uppercase tracking-wider flex items-center gap-2">
+          <span data-i18n="nav_price_btn">ПРАЙС-ЛИСТ</span>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- MAIN SCROLL CONTENT (5 CHOREOGRAPHED SECTIONS) -->
+  <main>
+
+    <!-- =====================================================================
+         SECTION 1: HERO (0% - 20% SCROLL)
+         ===================================================================== -->
+    <section id="hero" class="min-h-screen pt-28 pb-20 flex items-center relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- Left Column: Hero Typography & Banner Aesthetic -->
+          <div class="lg:col-span-7 space-y-6">
+            
+            <!-- Warm Cream Banner Pill (Authentic Apollo Billboard style) -->
+            <div class="inline-flex items-center gap-3 bg-warmCream text-slateDeep px-4 py-2 rounded-md shadow-lg">
+              <span class="w-2.5 h-2.5 rounded-full bg-apolloBronze"></span>
+              <span class="font-heading font-extrabold text-xs sm:text-sm uppercase tracking-widest" data-i18n="hero_badge">
+                СУХА ТА НЕОБРІЗНА ДОШКА • КИЇВ
+              </span>
+            </div>
+
+            <!-- Main Geometric Headline -->
+            <h1 class="font-display font-black text-3xl sm:text-5xl xl:text-[54px] uppercase leading-[1.08] tracking-tight text-white drop-shadow-sm">
+              <span data-i18n="hero_title_1">АПОЛЛО — ОДИН З НАЙБІЛЬШИХ СКЛАДІВ</span>
+              <span class="block text-timberGold mt-1" data-i18n="hero_title_2">ПИЛОМАТЕРІАЛІВ В УКРАЇНІ</span>
+            </h1>
+
+            <!-- Subheadline -->
+            <p class="text-base sm:text-lg text-warmCream/85 max-w-2xl leading-relaxed font-normal" data-i18n="hero_subtitle">
+              Понад 4 500 м³ добірної столярної та будівельної деревини камерної сушки (8–10%) у постійній наявності на Лівому березі Києва (Дніпровська набережна, 17е). Чесне поярусне точкування кожної дошки, продаж від 1 дошки до фурних партій.
+            </p>
+
+            <!-- Hero CTAs -->
+            <div class="pt-2 flex flex-wrap items-center gap-4">
+              <button onclick="openPriceModal()" class="btn-bronze px-7 py-4 rounded-xl font-heading font-extrabold text-sm uppercase tracking-wider flex items-center gap-3">
+                <span data-i18n="hero_cta_price">ВІДКРИТИ ПРАЙС-ЛИСТ</span>
+                <!-- Signature Apollo Directional Arrow -->
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h15"/></svg>
+              </button>
+
+              <a href="#contacts" class="btn-cream px-7 py-4 rounded-xl font-heading font-extrabold text-sm uppercase tracking-wider flex items-center gap-3">
+                <span data-i18n="hero_cta_contact">ЗВ'ЯЗАТИСЯ ЗІ СКЛАДОМ</span>
+                <svg class="w-4 h-4 text-apolloBronze" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 010-5 2.5 2.5 0 010 5z"/></svg>
+              </a>
+            </div>
+
+            <!-- Quick Billboard Specs Bar -->
+            <div class="pt-6 grid grid-cols-3 gap-3 sm:gap-5 max-w-xl">
+              <div class="apollo-glass p-3.5 rounded-xl border-l-4 border-l-apolloBronze">
+                <div class="font-mono font-bold text-xl sm:text-2xl text-white">8–10%</div>
+                <div class="text-xs text-warmCream/70 mt-0.5" data-i18n="hero_stat_1">Камерна вологість</div>
+              </div>
+              <div class="apollo-glass p-3.5 rounded-xl border-l-4 border-l-timberGold">
+                <div class="font-mono font-bold text-xl sm:text-2xl text-timberGold">4 500+ м³</div>
+                <div class="text-xs text-warmCream/70 mt-0.5" data-i18n="hero_stat_2">В наявності у Києві</div>
+              </div>
+              <div class="apollo-glass p-3.5 rounded-xl border-l-4 border-l-warmCream">
+                <div class="font-mono font-bold text-xl sm:text-2xl text-warmCream">25–50 мм</div>
+                <div class="text-xs text-warmCream/70 mt-0.5" data-i18n="hero_stat_3">Калібрована товщина</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Right Column: 3D Stack Interactive Hint Card -->
+          <div class="lg:col-span-5 flex flex-col items-start lg:items-end justify-end pointer-events-auto">
+            <div class="apollo-glass p-5 rounded-2xl max-w-xs border border-timberGold/30 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="font-mono text-[11px] uppercase tracking-widest text-timberGold" data-i18n="hero_3d_badge">3D ІНСПЕКЦІЯ ШТАБЕЛЯ</span>
+                <span class="px-2 py-0.5 rounded bg-apolloBronze/30 text-warmCream font-mono text-[10px]">WEBGL LIVE</span>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="hero_3d_desc">
+                Гортайте сторінку вниз, щоб розкласти штабель необрізної та сухої дошки в повітрі та дослідити текстуру, обзол і геометрію розпилу.
+              </p>
+              <div class="pt-1 flex items-center gap-2 text-xs font-mono text-warmCream">
+                <span>↓</span>
+                <span data-i18n="hero_scroll_hint">ПРОКРУТІТЬ ДЛЯ ДЕТАЛІЗАЦІЇ</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 2: EXPLODED VIEW — LIVE-EDGE & KILN-DRIED TIMBER (20% - 45%)
+         ===================================================================== -->
+    <section id="exploded" class="min-h-screen py-28 flex items-center relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          
+          <!-- Left Column: Section Heading & Anatomy Callouts -->
+          <div class="lg:col-span-6 space-y-6">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded bg-apolloBronze/25 border border-apolloBronze text-timberGold font-mono text-xs uppercase tracking-widest">
+              <span data-i18n="sec2_badge">ІНЖЕНЕРНА АНАТОМІЯ ДОШКИ</span>
+            </div>
+
+            <h2 class="font-display font-black text-2xl sm:text-4xl lg:text-5xl uppercase leading-tight text-white">
+              <span data-i18n="sec2_title_1">НЕОБРІЗНА ТА СУХА ДОШКА</span>
+              <span class="block text-warmCream mt-1" data-i18n="sec2_title_2">СТОЛЯРНОЇ ЯКОСТІ</span>
+            </h2>
+
+            <p class="text-warmCream/80 text-base leading-relaxed" data-i18n="sec2_desc">
+              Кожна партія проходить м’який цикл у конвекційних сушильних камерах із комп’ютерним контролем внутрішньої напруги. Дошка не має внутрішніх тріщин, зберігає природну щільність і живий край (обзол) для преміальних меблів, сходів та слебів.
+            </p>
+
+            <!-- 3 Engineering Cards -->
+            <div class="space-y-4 pt-2">
+              
+              <!-- Card 1 -->
+              <div class="apollo-glass p-5 rounded-xl border-l-4 border-l-timberGold flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-apolloBronze/20 border border-apolloBronze flex items-center justify-center shrink-0 font-mono font-bold text-timberGold">
+                  01
+                </div>
+                <div>
+                  <h3 class="font-heading font-extrabold text-base uppercase text-white" data-i18n="sec2_feat1_title">
+                    КАМЕРНА СУШКА 8–10% (БЕЗ ВНУТРІШНІХ НАПРУЖЕНЬ)
+                  </h3>
+                  <p class="text-sm text-warmCream/75 mt-1 leading-relaxed" data-i18n="sec2_feat1_desc">
+                    Ідеальна вологість для склеювання меблевого щита, виготовлення сходів, дверей та стільниць. Перевірка голчастим та безконтактним вологоміром при відвантаженні.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Card 2 -->
+              <div class="apollo-glass p-5 rounded-xl border-l-4 border-l-apolloBronze flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-apolloBronze/20 border border-apolloBronze flex items-center justify-center shrink-0 font-mono font-bold text-timberGold">
+                  02
+                </div>
+                <div>
+                  <h3 class="font-heading font-extrabold text-base uppercase text-white" data-i18n="sec2_feat2_title">
+                    ЧЕСНЕ ПОЯРУСНЕ ТОЧКУВАННЯ КОЖНОЇ ДОШКИ
+                  </h3>
+                  <p class="text-sm text-warmCream/75 mt-1 leading-relaxed" data-i18n="sec2_feat2_desc">
+                    Ви платите виключно за чистий корисний об’єм ділової деревини. Прозорий обмір ширини по середині пласти без урахування кори (обзолу) у присутності клієнта.
+                  </p>
+                </div>
+              </div>
+
+              <!-- Card 3 -->
+              <div class="apollo-glass p-5 rounded-xl border-l-4 border-l-warmCream flex items-start gap-4">
+                <div class="w-10 h-10 rounded-lg bg-apolloBronze/20 border border-apolloBronze flex items-center justify-center shrink-0 font-mono font-bold text-timberGold">
+                  03
+                </div>
+                <div>
+                  <h3 class="font-heading font-extrabold text-base uppercase text-white" data-i18n="sec2_feat3_title">
+                    ДОБІРНИЙ ЛІС ЕКСТРА / I ГАТУНОК (25, 32, 40, 50 ММ)
+                  </h3>
+                  <p class="text-sm text-warmCream/75 mt-1 leading-relaxed" data-i18n="sec2_feat3_desc">
+                    Широка палуба (від 180 до 450+ мм), рівномірний радіальний і тангенціальний розпил, мінімальна кількість сучків та чітка геометрія по всій довжині 3.0–4.5 м.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Right Column: Live 3D Callout Overlay -->
+          <div class="lg:col-span-6 flex flex-col items-start lg:items-end justify-center space-y-5">
+            <div class="bg-warmCream text-slateDeep p-6 rounded-2xl shadow-2xl max-w-sm border-2 border-apolloBronze">
+              <div class="flex items-center justify-between border-b border-slateDeep/15 pb-3 mb-3">
+                <span class="font-mono font-bold text-xs uppercase tracking-wider text-apolloBronze" data-i18n="sec2_card_tag">СПЕЦИФІКАЦІЯ РОЗПИЛУ</span>
+                <span class="font-mono font-bold text-xs bg-slateDeep text-warmCream px-2.5 py-0.5 rounded">ДСТУ EN 975-1</span>
+              </div>
+              <div class="font-heading font-black text-xl uppercase tracking-tight" data-i18n="sec2_card_title">
+                ЖИВИЙ КРАЙ (LIVE-EDGE) ТА КАЛІБРОВАНА ПЛАСТЬ
+              </div>
+              <p class="text-xs text-slateDeep/80 mt-2 leading-relaxed" data-i18n="sec2_card_text">
+                На 3D-сцені представлено центральну дошку зі штабеля «Аполло» в режимі вибух-схеми: ідеальна площина розпилу та натуральний захисний обзол по кромці.
+              </p>
+              <div class="mt-4 pt-3 border-t border-slateDeep/15 grid grid-cols-2 gap-2 font-mono text-xs">
+                <div>
+                  <span class="text-slateDeep/60 block text-[10px]" data-i18n="sec2_spec_t">ТОВЩИНА:</span>
+                  <span class="font-bold">25 / 32 / 40 / 50 мм</span>
+                </div>
+                <div>
+                  <span class="text-slateDeep/60 block text-[10px]" data-i18n="sec2_spec_l">ДОВЖИНА:</span>
+                  <span class="font-bold">2.5 — 4.5 м</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 3: WOOD SPECIES SWITCHER & BANNER ASSORTMENT (45% - 70%)
+         ===================================================================== -->
+    <section id="catalog" class="min-h-screen py-28 relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full space-y-12">
+        
+        <!-- Header + Interactive Real-time 3D Species Switcher -->
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
+          <div class="space-y-3 max-w-2xl">
+            <div class="inline-flex items-center gap-2 bg-warmCream text-slateDeep px-3.5 py-1 rounded font-heading font-extrabold text-xs uppercase tracking-widest">
+              <span data-i18n="sec3_badge">ФІРМОВИЙ АСОРТИМЕНТ СКЛАДУ</span>
+            </div>
+            <h2 class="font-display font-black text-2xl sm:text-4xl lg:text-5xl uppercase text-white leading-tight" data-i18n="sec3_title">
+              ПОРОДИ ДЕРЕВИНИ ТА ПРОФІЛІ В НАЯВНОСТІ
+            </h2>
+          </div>
+
+          <!-- Real-Time 3D Wood Species Selector -->
+          <div class="apollo-glass p-2.5 rounded-2xl border border-warmCream/20 flex flex-col gap-2">
+            <div class="flex items-center justify-between px-2">
+              <span class="font-mono text-[11px] uppercase tracking-wider text-timberGold" data-i18n="sec3_switcher_label">
+                ЗМІНИТИ ПОРОДУ 3D-ШТАБЕЛЯ НА СЦЕНІ:
+              </span>
+              <span id="species-density-tag" class="font-mono text-[11px] text-warmCream/70">720 кг/м³</span>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <button onclick="switchWoodSpecies('oak')" id="btn-species-oak" class="species-btn active px-4 py-2.5 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider border border-warmCream/20 transition-all flex items-center justify-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#C88A3B] border border-black/30"></span>
+                <span data-i18n="species_oak">ДУБ</span>
+              </button>
+              <button onclick="switchWoodSpecies('ash')" id="btn-species-ash" class="species-btn px-4 py-2.5 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider border border-warmCream/20 text-warmCream hover:border-timberGold transition-all flex items-center justify-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#E5C796] border border-black/30"></span>
+                <span data-i18n="species_ash">ЯСЕН</span>
+              </button>
+              <button onclick="switchWoodSpecies('alder')" id="btn-species-alder" class="species-btn px-4 py-2.5 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider border border-warmCream/20 text-warmCream hover:border-timberGold transition-all flex items-center justify-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#C97A4B] border border-black/30"></span>
+                <span data-i18n="species_alder">ВІЛЬХА</span>
+              </button>
+              <button onclick="switchWoodSpecies('pine')" id="btn-species-pine" class="species-btn px-4 py-2.5 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider border border-warmCream/20 text-warmCream hover:border-timberGold transition-all flex items-center justify-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-[#E6B15A] border border-black/30"></span>
+                <span data-i18n="species_pine">СОСНА</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 6 SIGNATURE APOLLO BILLBOARD PRODUCT CARDS (Dark Slate Top + Warm Cream Bottom Plate) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+          <!-- PRODUCT 1: Необрізна дошка -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('untrimmed')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card1_tag">ХІТ СКЛАДУ • СУХА 8-10%</span>
+                <span class="font-mono text-xs text-warmCream/60">25 / 32 / 40 / 50 мм</span>
+              </div>
+              <!-- Custom SVG Profile Diagram: Stack of Live-Edge Boards -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <!-- Bottom Slab -->
+                  <path d="M14 66 L226 66 L220 80 L20 80 Z" fill="#A86A38" stroke="#E0A14A" stroke-width="1.5"/>
+                  <path d="M14 66 L20 80 L10 78 Z" fill="#3A2618"/>
+                  <path d="M226 66 L232 78 L220 80 Z" fill="#3A2618"/>
+                  <!-- Middle Slab -->
+                  <path d="M22 40 L218 40 L212 54 L28 54 Z" fill="#C88A3B" stroke="#E0A14A" stroke-width="1.5"/>
+                  <path d="M22 40 L28 54 L18 52 Z" fill="#3A2618"/>
+                  <path d="M218 40 L224 52 L212 54 Z" fill="#3A2618"/>
+                  <!-- Top Slab -->
+                  <path d="M30 14 L210 14 L204 28 L36 28 Z" fill="#E0A14A" stroke="#F3EDE2" stroke-width="1.5"/>
+                  <path d="M30 14 L36 28 L25 26 Z" fill="#3A2618"/>
+                  <path d="M210 14 L216 26 L204 28 Z" fill="#3A2618"/>
+                  <!-- Stickers -->
+                  <rect x="65" y="28" width="10" height="12" fill="#F3EDE2" opacity="0.6"/>
+                  <rect x="165" y="28" width="10" height="12" fill="#F3EDE2" opacity="0.6"/>
+                  <rect x="65" y="54" width="10" height="12" fill="#F3EDE2" opacity="0.6"/>
+                  <rect x="165" y="54" width="10" height="12" fill="#F3EDE2" opacity="0.6"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card1_desc">
+                Добірна столярна необрізна дошка дуба, ясена, вільхи та сосни. Камерна сушка, збережений природний обзол, широка палуба для меблів та сходів.
+              </p>
+            </div>
+            <!-- Signature Warm Cream Bottom Plate -->
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card1_title">НЕОБРІЗНА ДОШКА</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card1_price">від 9 800 грн / м³</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 2: Суха обрізна дошка -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('kiln_dried')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card2_tag">КАЛІБРОВАНА • КАМЕРНА</span>
+                <span class="font-mono text-xs text-warmCream/60">25 / 32 / 40 / 50 мм</span>
+              </div>
+              <!-- SVG Profile Diagram: Square-Edged Boards -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <rect x="20" y="62" width="200" height="16" rx="1" fill="#A86A38" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="30" y="38" width="180" height="16" rx="1" fill="#C88A3B" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="40" y="14" width="160" height="16" rx="1" fill="#E0A14A" stroke="#F3EDE2" stroke-width="1.5"/>
+                  <line x1="55" y1="14" x2="55" y2="30" stroke="#13191C" stroke-opacity="0.3"/>
+                  <line x1="185" y1="14" x2="185" y2="30" stroke="#13191C" stroke-opacity="0.3"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card2_desc">
+                Суха обрізна та стругана дошка камерної сушки з чітким прямокутним перерізом без обзолу. Готова до столярної обробки та будівництва.
+              </p>
+            </div>
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card2_title">СУХА ДОШКА</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card2_price">від 11 500 грн / м³</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 3: Брус струганий -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('kiln_dried')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card3_tag">ІДЕАЛЬНА ГЕОМЕТРІЯ</span>
+                <span class="font-mono text-xs text-warmCream/60">40×40 — 150×150 мм</span>
+              </div>
+              <!-- SVG Profile Diagram: Planed Timber Beams -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <rect x="35" y="42" width="44" height="38" rx="2" fill="#A86A38" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="98" y="42" width="44" height="38" rx="2" fill="#C88A3B" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="161" y="42" width="44" height="38" rx="2" fill="#A86A38" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="66" y="10" width="108" height="26" rx="2" fill="#E0A14A" stroke="#F3EDE2" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card3_desc">
+                Сухий струганий та калібрований брус для пергол, каркасного домобудування, покрівлі та дизайнерських перегородок. Чотиристороннє стругання.
+              </p>
+            </div>
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card3_title">БРУС СТРУГАНИЙ</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card3_price">від 12 400 грн / м³</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 4: Терасна дошка -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('profiled')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card4_tag">ВЕЛЬВЕТ / ГЛАДКА</span>
+                <span class="font-mono text-xs text-warmCream/60">28 / 35 × 120–140 мм</span>
+              </div>
+              <!-- SVG Profile Diagram: Ribbed Decking Board -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <path d="M20 34 H32 V26 H44 V34 H56 V26 H68 V34 H80 V26 H92 V34 H104 V26 H116 V34 H128 V26 H140 V34 H152 V26 H164 V34 H176 V26 H188 V34 H200 V26 H220 V64 H20 Z" fill="#C88A3B" stroke="#E0A14A" stroke-width="1.5"/>
+                  <rect x="55" y="54" width="18" height="10" fill="#13191C"/>
+                  <rect x="165" y="54" width="18" height="10" fill="#13191C"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card4_desc">
+                Натуральна терасна та палубна дошка (модрина, термоясен, дуб, сосна) з протиковзним профілем «Вельвет» або гладкою фаскою для терас та басейнів.
+              </p>
+            </div>
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card4_title">ТЕРАСНА ДОШКА</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card4_price">від 680 грн / м²</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 5: Вагонка -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('profiled')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card5_tag">ЄВРОВАГОНКА • ШТИЛЬ</span>
+                <span class="font-mono text-xs text-warmCream/60">12 / 14 / 16 мм</span>
+              </div>
+              <!-- SVG Profile Diagram: Tongue & Groove Cladding -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <path d="M16 32 L36 32 L42 26 L195 26 L195 36 L220 36 L220 48 L195 48 L195 58 L30 58 L30 48 L16 48 Z" fill="#E0A14A" stroke="#F3EDE2" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card5_desc">
+                Дерев'яна вагонка (вільха, липа, сосна, ясен), фальш-брус та блок-хаус для внутрішнього оздоблення, саун, лазень та фасадів.
+              </p>
+            </div>
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card5_title">ВАГОНКА</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card5_price">від 390 грн / м²</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+          <!-- PRODUCT 6: Дошка підлоги -->
+          <div class="apollo-card-banner rounded-2xl overflow-hidden flex flex-col justify-between group cursor-pointer" onclick="openPriceModal('profiled')">
+            <div class="p-6 space-y-4">
+              <div class="flex items-center justify-between">
+                <span class="px-2.5 py-1 rounded bg-apolloBronze/30 border border-apolloBronze text-timberGold font-mono text-xs font-bold" data-i18n="card6_tag">ШПУНТОВАНА • МАСИВ</span>
+                <span class="font-mono text-xs text-warmCream/60">28 / 35 × 110–135 мм</span>
+              </div>
+              <!-- SVG Profile Diagram: Tongue & Groove Flooring with Relief Grooves -->
+              <div class="h-32 bg-slateDarker/90 rounded-xl border border-warmCream/10 flex items-center justify-center p-4">
+                <svg class="w-full h-full max-w-[230px]" viewBox="0 0 240 90" fill="none">
+                  <path d="M18 34 H32 V24 H202 V36 H222 V48 H202 V62 H160 V54 H146 V62 H94 V54 H80 V62 H32 V48 H18 Z" fill="#A86A38" stroke="#E0A14A" stroke-width="1.5"/>
+                </svg>
+              </div>
+              <p class="text-xs text-warmCream/80 leading-relaxed" data-i18n="card6_desc">
+                Масивна шпунтована дошка підлоги камерної сушки з термокомпенсаційними пазами на тильній стороні. Ідеальне стикування шип-паз без щілин.
+              </p>
+            </div>
+            <div class="banner-cream-footer bg-warmCream text-slateDeep px-6 py-4 flex items-center justify-between transition-colors">
+              <div>
+                <h3 class="font-heading font-black text-lg uppercase tracking-wide leading-tight" data-i18n="card6_title">ДОШКА ПІДЛОГИ</h3>
+                <span class="font-mono text-xs font-bold text-apolloBronze group-hover:text-slateDeep" data-i18n="card6_price">від 640 грн / м²</span>
+              </div>
+              <div class="w-9 h-9 rounded-lg bg-slateDeep text-warmCream flex items-center justify-center font-bold">→</div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 4: WAREHOUSE SCALE IN KYIV (70% - 90% SCROLL)
+         ===================================================================== -->
+    <section id="warehouse" class="min-h-screen py-28 flex items-center relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        
+        <!-- Signature Contrast Block in Warm Cream (#F3EDE2) -->
+        <div class="bg-warmCream text-slateDeep rounded-3xl p-6 sm:p-10 lg:p-14 shadow-2xl border-2 border-apolloBronze relative overflow-hidden">
+          
+          <!-- Subtle Decorative Timber Lines -->
+          <div class="absolute -right-16 -top-16 w-64 h-64 rounded-full border-[24px] border-apolloBronze/10 pointer-events-none"></div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center relative z-10">
+            
+            <!-- Left Info -->
+            <div class="lg:col-span-7 space-y-6">
+              <div class="inline-flex items-center gap-2 bg-slateDeep text-warmCream px-4 py-1.5 rounded font-mono text-xs font-bold uppercase tracking-widest">
+                <span class="text-timberGold">★</span>
+                <span data-i18n="sec4_badge">МАСШТАБ ТА ЛОГІСТИКА • КИЇВ, ЛІВИЙ БЕРЕГ</span>
+              </div>
+
+              <h2 class="font-display font-black text-2xl sm:text-4xl lg:text-[42px] uppercase leading-[1.12] text-slateDeep">
+                <span data-i18n="sec4_title_1">СКЛАД «АПОЛЛО» НА</span>
+                <span class="block text-apolloBronze mt-1" data-i18n="sec4_title_2">ДНІПРОВСЬКІЙ НАБЕРЕЖНІЙ, 17Е</span>
+              </h2>
+
+              <p class="text-slateDeep/85 text-base sm:text-lg leading-relaxed" data-i18n="sec4_desc">
+                Ми підтримуємо один із найбільших запасів сухої столярної та необрізної дошки в Україні. Закриті сухі ангари, власні лінії торцювання та механізоване завантаження дозволяють відвантажувати як одну дошку для майстерні, так і повноцінні фури 22 тонни в день звернення.
+              </p>
+
+              <!-- 4 Key Warehouse Advantages -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <div class="bg-warmSand p-4 rounded-xl border border-slateDeep/10">
+                  <div class="font-heading font-extrabold text-sm uppercase text-slateDeep flex items-center gap-2">
+                    <span class="text-apolloBronze">■</span>
+                    <span data-i18n="sec4_adv1_t">Опт та роздріб від 1 дошки</span>
+                  </div>
+                  <p class="text-xs text-slateDeep/75 mt-1" data-i18n="sec4_adv1_d">
+                    Особистий відбір кожної дошки на складі разом із майстром або дистанційний відеовідбір партії.
+                  </p>
+                </div>
+
+                <div class="bg-warmSand p-4 rounded-xl border border-slateDeep/10">
+                  <div class="font-heading font-extrabold text-sm uppercase text-slateDeep flex items-center gap-2">
+                    <span class="text-apolloBronze">■</span>
+                    <span data-i18n="sec4_adv2_t">Зручний заїзд для фур та авто</span>
+                  </div>
+                  <p class="text-xs text-slateDeep/75 mt-1" data-i18n="sec4_adv2_d">
+                    Асфальтований під'їзд на Дніпровській набережній, 17е. Швидке верхнє та бокове навантаження навантажувачем.
+                  </p>
+                </div>
+
+                <div class="bg-warmSand p-4 rounded-xl border border-slateDeep/10">
+                  <div class="font-heading font-extrabold text-sm uppercase text-slateDeep flex items-center gap-2">
+                    <span class="text-apolloBronze">■</span>
+                    <span data-i18n="sec4_adv3_t">Криті вентильовані склади</span>
+                  </div>
+                  <p class="text-xs text-slateDeep/75 mt-1" data-i18n="sec4_adv3_d">
+                    Дошка зберігається у правильних штабелях на сухих прокладках без набору атмосферної вологи.
+                  </p>
+                </div>
+
+                <div class="bg-warmSand p-4 rounded-xl border border-slateDeep/10">
+                  <div class="font-heading font-extrabold text-sm uppercase text-slateDeep flex items-center gap-2">
+                    <span class="text-apolloBronze">■</span>
+                    <span data-i18n="sec4_adv4_t">Доставка по Києву та Україні</span>
+                  </div>
+                  <p class="text-xs text-slateDeep/75 mt-1" data-i18n="sec4_adv4_d">
+                    Оперативна подача власного транспорту від 1.5 до 22 тонн або самовивіз зі складу за 15 хвилин.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Telemetry Metrics Box -->
+            <div class="lg:col-span-5 bg-slateDeep text-warmCream p-7 sm:p-8 rounded-2xl border-2 border-apolloBronze space-y-6 shadow-xl">
+              <div class="flex items-center justify-between border-b border-warmCream/15 pb-4">
+                <span class="font-mono text-xs uppercase tracking-widest text-timberGold" data-i18n="sec4_metrics_title">ПОКАЗНИКИ СКЛАДУ АПОЛЛО</span>
+                <span class="font-mono text-xs text-warmCream/60">KYIV HUB</span>
+              </div>
+
+              <div class="grid grid-cols-2 gap-6">
+                <div>
+                  <div class="font-display font-black text-3xl sm:text-4xl text-timberGold">4 500+</div>
+                  <div class="text-xs text-warmCream/75 mt-1 font-mono" data-i18n="sec4_m1">м³ пиломатеріалів постійно на складі</div>
+                </div>
+                <div>
+                  <div class="font-display font-black text-3xl sm:text-4xl text-white">8–10%</div>
+                  <div class="text-xs text-warmCream/75 mt-1 font-mono" data-i18n="sec4_m2">гарантована вологість столярної дошки</div>
+                </div>
+                <div>
+                  <div class="font-display font-black text-3xl sm:text-4xl text-warmCream">15 хв</div>
+                  <div class="text-xs text-warmCream/75 mt-1 font-mono" data-i18n="sec4_m3">середній час обміру та завантаження</div>
+                </div>
+                <div>
+                  <div class="font-display font-black text-3xl sm:text-4xl text-apolloBronzeLight">100%</div>
+                  <div class="text-xs text-warmCream/75 mt-1 font-mono" data-i18n="sec4_m4">відповідність сортності Екстра / I гатунок</div>
+                </div>
+              </div>
+
+              <div class="pt-2">
+                <button onclick="openPriceModal()" class="w-full btn-bronze py-4 rounded-xl font-heading font-extrabold text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-3">
+                  <span data-i18n="sec4_cta">РОЗРАХУВАТИ ВАРТІСТЬ ПАРТІЇ</span>
+                  <span>→</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =====================================================================
+         SECTION 5: CONTACTS & NAVIGATION (90% - 100% SCROLL)
+         ===================================================================== -->
+    <section id="contacts" class="min-h-screen py-28 flex items-center relative">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        
+        <div class="apollo-glass-heavy rounded-3xl p-6 sm:p-12 border-2 border-apolloBronze shadow-2xl">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            
+            <!-- Left: Signature Outdoor Billboard Style Contact Block -->
+            <div class="lg:col-span-7 space-y-6">
+              
+              <!-- Signature Directional Bronze Arrow Banner -->
+              <div class="inline-flex items-center gap-3 bg-apolloBronze text-white px-5 py-2 rounded-lg font-heading font-extrabold text-xs sm:text-sm uppercase tracking-widest">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 12h15"/></svg>
+                <span data-i18n="sec5_arrow_badge">ЗАЇЗД НА СКЛАД • ЛІВИЙ БЕРЕГ</span>
+              </div>
+
+              <h2 class="font-display font-black text-3xl sm:text-5xl uppercase text-white leading-tight">
+                <span data-i18n="sec5_title">ЧЕКАЄМО ВАС НА СКЛАДІ «АПОЛЛО»</span>
+              </h2>
+
+              <!-- Address Card -->
+              <div class="bg-warmCream text-slateDeep p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-8 border-l-apolloBronze">
+                <div>
+                  <span class="font-mono text-xs uppercase font-bold text-apolloBronze block" data-i18n="sec5_addr_label">АДРЕСА СКЛАДУ В КИЄВІ:</span>
+                  <div class="font-heading font-black text-xl sm:text-2xl uppercase mt-0.5" data-i18n="sec5_addr_val">
+                    м. Київ, Дніпровська набережна, 17е
+                  </div>
+                  <span class="text-xs text-slateDeep/75 mt-1 block" data-i18n="sec5_hours">Пн–Сб: 08:30 – 18:00 • Самовивіз та доставка</span>
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&query=Київ,+Дніпровська+набережна,+17е" target="_blank" rel="noopener noreferrer" class="btn-bronze px-5 py-3.5 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider shrink-0 text-center">
+                  <span data-i18n="sec5_map_btn">ВІДКРИТИ GOOGLE MAPS ↗</span>
+                </a>
+              </div>
+
+              <!-- Clickable Large Phones (Strictly as on Apollo Banners) -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                <a href="tel:+380685386923" class="apollo-glass p-5 rounded-2xl border border-warmCream/20 hover:border-timberGold group transition-all flex items-center justify-between">
+                  <div>
+                    <span class="font-mono text-xs text-timberGold block" data-i18n="sec5_phone1_label">ВІДДІЛ ПРОДАЖУ ТА ВІДВАНТАЖЕННЯ:</span>
+                    <span class="font-mono font-extrabold text-2xl sm:text-3xl text-white group-hover:text-timberGold transition-colors mt-1 block">
+                      068 538 69 23
+                    </span>
+                  </div>
+                  <span class="w-11 h-11 rounded-xl bg-apolloBronze/30 border border-apolloBronze flex items-center justify-center text-timberGold group-hover:bg-timberGold group-hover:text-slateDeep transition-all">
+                    ☎
+                  </span>
+                </a>
+
+                <a href="tel:+380960000076" class="apollo-glass p-5 rounded-2xl border border-warmCream/20 hover:border-timberGold group transition-all flex items-center justify-between">
+                  <div>
+                    <span class="font-mono text-xs text-timberGold block" data-i18n="sec5_phone2_label">ОПТОВІ ПАРТІЇ ТА КОНСУЛЬТАЦІЯ:</span>
+                    <span class="font-mono font-extrabold text-2xl sm:text-3xl text-white group-hover:text-timberGold transition-colors mt-1 block">
+                      096 000 00 76
+                    </span>
+                  </div>
+                  <span class="w-11 h-11 rounded-xl bg-apolloBronze/30 border border-apolloBronze flex items-center justify-center text-timberGold group-hover:bg-timberGold group-hover:text-slateDeep transition-all">
+                    ☎
+                  </span>
+                </a>
+              </div>
+
+            </div>
+
+            <!-- Right: Quick Price List & Interactive Order Card -->
+            <div class="lg:col-span-5 bg-slateDarker p-7 sm:p-8 rounded-2xl border border-warmCream/15 space-y-6">
+              <div class="flex items-center gap-3">
+                <div class="w-3 h-3 rounded-full bg-timberGold pulse-dot"></div>
+                <span class="font-mono text-xs uppercase tracking-widest text-warmCream/80" data-i18n="sec5_box_tag">ОНЛАЙН ПРАЙС ТА КАЛЬКУЛЯТОР М³</span>
+              </div>
+
+              <h3 class="font-heading font-black text-2xl uppercase text-white" data-i18n="sec5_box_title">
+                ДІЗНАЙТЕСЯ АКТУАЛЬНУ ЦІНУ ТА НАЯВНІСТЬ ЗА 30 СЕКУНД
+              </h3>
+
+              <p class="text-sm text-warmCream/75 leading-relaxed" data-i18n="sec5_box_desc">
+                Відкрийте повний інтерактивний прайс-лист складу «Аполло» з розрахунком кубатури та кількості дощок по потрібній вам товщині (25, 32, 40, 50 мм).
+              </p>
+
+              <button onclick="openPriceModal()" class="w-full btn-cream py-4 rounded-xl font-heading font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3">
+                <span data-i18n="sec5_box_btn">ВІДКРИТИ ПРАЙС-ЛИСТ ТА КАЛЬКУЛЯТОР</span>
+                <span>→</span>
+              </button>
+
+              <!-- Mini Billboard Tags -->
+              <div class="pt-3 border-t border-warmCream/10 flex flex-wrap gap-2 font-mono text-[11px] text-warmCream/70">
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">НЕОБРІЗНА ДОШКА</span>
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">СУХА ДОШКА</span>
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">БРУС</span>
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">ТЕРАСНА ДОШКА</span>
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">ВАГОНКА</span>
+                <span class="px-2.5 py-1 rounded bg-slateDeep border border-warmCream/10">ДОШКА ПІДЛОГИ</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Footer Bottom Bar -->
+          <div class="mt-12 pt-6 border-t border-warmCream/15 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-warmCream/60 font-mono">
+            <div>
+              © 2026 АПОΛΛО — ПИЛОМАТЕРІАЛИ. <span data-i18n="footer_rights">Один з найбільших складів пиломатеріалів в Україні.</span>
+            </div>
+            <div>
+              <span data-i18n="footer_loc">Київ, Дніпровська набережна, 17е • 096 000 00 76 • 068 538 69 23</span>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =========================================================================
+       INTERACTIVE PRICE LIST + CUBIC VOLUME CALCULATOR MODAL
+       ========================================================================= -->
+  <div id="price-modal" class="hidden-modal fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slateDarker/85 backdrop-blur-xl overflow-y-auto">
+    <div class="bg-slateDeep border-2 border-apolloBronze rounded-3xl max-w-6xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl my-auto">
+      
+      <!-- Modal Header -->
+      <div class="bg-slateDarker px-6 py-5 border-b border-warmCream/15 flex items-center justify-between gap-4 shrink-0">
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-8 rounded bg-apolloBronze"></span>
+          <div>
+            <h3 class="font-display font-black text-lg sm:text-2xl uppercase text-white" data-i18n="modal_title">
+              ПРАЙС-ЛИСТ ТА КАЛЬКУЛЯТОР КУБАТУРИ «АПОЛЛО»
+            </h3>
+            <p class="font-mono text-xs text-warmCream/70" data-i18n="modal_subtitle">
+              Склад: м. Київ, Дніпровська набережна, 17е • Тел: 068 538 69 23, 096 000 00 76
+            </p>
+          </div>
+        </div>
+        <button onclick="closePriceModal()" class="w-10 h-10 rounded-xl bg-warmCream/10 hover:bg-apolloBronze text-white font-mono text-lg flex items-center justify-center transition-colors" aria-label="Close modal">
+          ✕
+        </button>
+      </div>
+
+      <!-- Modal Scrollable Body -->
+      <div class="p-6 overflow-y-auto space-y-8">
+        
+        <!-- Category Filter Tabs -->
+        <div class="flex flex-wrap items-center justify-between gap-4">
+          <div class="flex flex-wrap gap-2">
+            <button onclick="filterPriceTable('all')" id="tab-all" class="price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-warmCream text-slateDeep transition-all" data-i18n="tab_all">
+              Всі позиції
+            </button>
+            <button onclick="filterPriceTable('untrimmed')" id="tab-untrimmed" class="price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-slateDarker text-warmCream border border-warmCream/15 hover:border-timberGold transition-all" data-i18n="tab_untrimmed">
+              Необрізна дошка
+            </button>
+            <button onclick="filterPriceTable('kiln_dried')" id="tab-kiln_dried" class="price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-slateDarker text-warmCream border border-warmCream/15 hover:border-timberGold transition-all" data-i18n="tab_kiln">
+              Суха дошка та Брус
+            </button>
+            <button onclick="filterPriceTable('profiled')" id="tab-profiled" class="price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-slateDarker text-warmCream border border-warmCream/15 hover:border-timberGold transition-all" data-i18n="tab_profiled">
+              Терасна / Вагонка / Підлога
+            </button>
+          </div>
+          <div class="font-mono text-xs text-timberGold" data-i18n="modal_note">
+            * Поярусне точкування кожної дошки при клієнті
+          </div>
+        </div>
+
+        <!-- Price Table -->
+        <div class="overflow-x-auto rounded-2xl border border-warmCream/15">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-warmCream text-slateDeep font-heading font-black text-xs uppercase tracking-wider">
+                <th class="py-3.5 px-4" data-i18n="th_item">Позиція та Порода</th>
+                <th class="py-3.5 px-4" data-i18n="th_dim">Товщина / Розмір</th>
+                <th class="py-3.5 px-4" data-i18n="th_moist">Вологість</th>
+                <th class="py-3.5 px-4" data-i18n="th_grade">Гатунок</th>
+                <th class="py-3.5 px-4" data-i18n="th_stock">Наявність у Києві</th>
+                <th class="py-3.5 px-4" data-i18n="th_price">Ціна</th>
+                <th class="py-3.5 px-4 text-right" data-i18n="th_action">Розрахунок</th>
+              </tr>
+            </thead>
+            <tbody id="price-table-body" class="divide-y divide-warmCream/10 text-sm font-mono">
+              <!-- Populated dynamically via JS for instant language & category switching -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Interactive Cubic Volume & Board Calculator -->
+        <div id="calculator-box" class="bg-warmCream text-slateDeep rounded-2xl p-6 border-2 border-apolloBronze">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            
+            <div class="space-y-4 flex-1">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded bg-slateDeep text-timberGold font-mono text-xs font-bold uppercase" data-i18n="calc_badge">ШВИДКИЙ КАЛЬКУЛЯТОР ПАРТІЇ</span>
+                <span id="calc-selected-notice" class="font-mono text-xs text-apolloBronze font-bold"></span>
+              </div>
+              
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Select Item -->
+                <div>
+                  <label class="block font-heading font-bold text-xs uppercase mb-1.5" data-i18n="calc_label_item">Оберіть матеріал:</label>
+                  <select id="calc-item-select" onchange="updateCalculator()" class="w-full bg-white text-slateDeep border border-slateDeep/25 rounded-xl px-3.5 py-2.5 font-mono text-xs font-bold focus:outline-none focus:border-apolloBronze">
+                    <!-- Populated via JS -->
+                  </select>
+                </div>
+
+                <!-- Select Thickness -->
+                <div>
+                  <label class="block font-heading font-bold text-xs uppercase mb-1.5" data-i18n="calc_label_thick">Товщина дошки:</label>
+                  <select id="calc-thick-select" onchange="updateCalculator()" class="w-full bg-white text-slateDeep border border-slateDeep/25 rounded-xl px-3.5 py-2.5 font-mono text-xs font-bold focus:outline-none focus:border-apolloBronze">
+                    <option value="25">25 мм (Столярна)</option>
+                    <option value="32">32 мм (Столярна)</option>
+                    <option value="40">40 мм (Масив)</option>
+                    <option value="50" selected>50 мм (Слеб / Столярна)</option>
+                  </select>
+                </div>
+
+                <!-- Input Volume m3 -->
+                <div>
+                  <label class="block font-heading font-bold text-xs uppercase mb-1.5" data-i18n="calc_label_vol">Об'єм (м³ або м²):</label>
+                  <div class="flex items-center">
+                    <button onclick="adjustVolume(-0.5)" class="px-3 py-2.5 bg-slateDeep text-warmCream rounded-l-xl font-mono font-bold hover:bg-apolloBronze transition-colors">-</button>
+                    <input id="calc-vol-input" type="number" step="0.5" min="0.1" max="500" value="2.5" oninput="updateCalculator()" class="w-full bg-white text-center text-slateDeep border-y border-slateDeep/25 py-2.5 font-mono text-xs font-bold focus:outline-none" />
+                    <button onclick="adjustVolume(0.5)" class="px-3 py-2.5 bg-slateDeep text-warmCream rounded-r-xl font-mono font-bold hover:bg-apolloBronze transition-colors">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Output Summary & Call Buttons -->
+            <div class="bg-slateDeep text-warmCream p-5 rounded-2xl lg:w-96 space-y-3 shrink-0 border border-apolloBronze">
+              <div class="flex items-center justify-between text-xs font-mono text-warmCream/70">
+                <span data-i18n="calc_est_boards">Орієнтовна к-сть дощок (4.0м):</span>
+                <span id="calc-boards-count" class="text-warmCream font-bold">~20 шт.</span>
+              </div>
+              <div class="flex items-baseline justify-between border-t border-warmCream/15 pt-3">
+                <span class="font-heading font-bold text-xs uppercase text-warmCream/80" data-i18n="calc_total_label">ОРІЄНТОВНА СУМА:</span>
+                <span id="calc-total-price" class="font-mono font-extrabold text-2xl text-timberGold">70 000 грн</span>
+              </div>
+              <div class="grid grid-cols-2 gap-2 pt-2">
+                <a href="tel:+380685386923" class="btn-bronze py-2.5 px-3 rounded-xl font-mono font-bold text-xs text-center flex items-center justify-center gap-1.5">
+                  <span>☎ 068 538 69 23</span>
+                </a>
+                <a href="tel:+380960000076" class="bg-warmCream hover:bg-timberGold text-slateDeep py-2.5 px-3 rounded-xl font-mono font-bold text-xs text-center flex items-center justify-center gap-1.5 transition-colors">
+                  <span>☎ 096 000 00 76</span>
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       JAVASCRIPT: MULTILINGUAL DICTIONARY, PROCEDURAL 3D WEBGL & GSAP SCROLL
+       ========================================================================= -->
+  <script>
+    /* =========================================================================
+       1. COMPLETE TRILINGUAL DICTIONARY (UA / RU / EN)
+       ========================================================================= */
+    const priceItemsData = [
+      {
+        id: 'oak_untrimmed',
+        category: 'untrimmed',
+        unit: 'м³',
+        price: 28000,
+        dim: '25 / 32 / 40 / 50 мм',
+        moist: '8–10%',
+        grade: 'Екстра / I',
+        names: {
+          ua: 'Необрізна дошка ДУБ (суха столярна)',
+          ru: 'Необрезная доска ДУБ (сухая столярная)',
+          en: 'Live-Edge OAK Timber Slab (Kiln-Dried)'
+        }
+      },
+      {
+        id: 'ash_untrimmed',
+        category: 'untrimmed',
+        unit: 'м³',
+        price: 24500,
+        dim: '25 / 32 / 40 / 50 мм',
+        moist: '8–10%',
+        grade: 'Екстра / I',
+        names: {
+          ua: 'Необрізна дошка ЯСЕН (суха столярна)',
+          ru: 'Необрезная доска ЯСЕНЬ (сухая столярная)',
+          en: 'Live-Edge ASH Timber Slab (Kiln-Dried)'
+        }
+      },
+      {
+        id: 'alder_untrimmed',
+        category: 'untrimmed',
+        unit: 'м³',
+        price: 15800,
+        dim: '25 / 32 / 40 / 50 мм',
+        moist: '8–10%',
+        grade: 'Екстра / I',
+        names: {
+          ua: 'Необрізна дошка ВІЛЬХА (суха столярна)',
+          ru: 'Необрезная доска ОЛЬХА (сухая столярная)',
+          en: 'Live-Edge ALDER Timber Slab (Kiln-Dried)'
+        }
+      },
+      {
+        id: 'pine_untrimmed',
+        category: 'untrimmed',
+        unit: 'м³',
+        price: 9800,
+        dim: '25 / 32 / 40 / 50 мм',
+        moist: '8–10%',
+        grade: 'Екстра / I',
+        names: {
+          ua: 'Необрізна дошка СОСНА (столярна суха)',
+          ru: 'Необрезная доска СОСНА (столярная сухая)',
+          en: 'Live-Edge PINE Timber Slab (Kiln-Dried)'
+        }
+      },
+      {
+        id: 'edged_dry',
+        category: 'kiln_dried',
+        unit: 'м³',
+        price: 11500,
+        dim: '25 / 32 / 40 / 50 × 100–200 мм',
+        moist: '8–10%',
+        grade: 'I гатунок',
+        names: {
+          ua: 'Суха обрізна дошка (камерної сушки)',
+          ru: 'Сухая обрезная доска (камерной сушки)',
+          en: 'Kiln-Dried Square-Edged Board'
+        }
+      },
+      {
+        id: 'beam_planed',
+        category: 'kiln_dried',
+        unit: 'м³',
+        price: 12400,
+        dim: '40×40, 50×100, 100×100, 150×150 мм',
+        moist: '10–12%',
+        grade: 'Екстра',
+        names: {
+          ua: 'Брус сухий струганий (калібрований)',
+          ru: 'Брус сухой строганный (калиброванный)',
+          en: 'Planed Structural Timber Beam'
+        }
+      },
+      {
+        id: 'decking_board',
+        category: 'profiled',
+        unit: 'м²',
+        price: 680,
+        dim: '28 / 35 × 120–140 мм',
+        moist: '10–12%',
+        grade: 'Екстра / А',
+        names: {
+          ua: 'Терасна дошка (Вельвет / Палубна)',
+          ru: 'Террасная доска (Вельвет / Палубная)',
+          en: 'Ribbed & Smooth Terrace Decking Board'
+        }
+      },
+      {
+        id: 'cladding_lining',
+        category: 'profiled',
+        unit: 'м²',
+        price: 390,
+        dim: '12 / 14 / 16 × 80–120 мм',
+        moist: '8–10%',
+        grade: 'Екстра / I',
+        names: {
+          ua: 'Вагонка дерев’яна (Євровагонка / Штиль)',
+          ru: 'Вагонка деревянная (Евровагонка / Штиль)',
+          en: 'Timber Cladding & Interior Lining'
+        }
+      },
+      {
+        id: 'floor_board',
+        category: 'profiled',
+        unit: 'м²',
+        price: 640,
+        dim: '28 / 35 × 110–135 мм',
+        moist: '8–10%',
+        grade: 'Екстра / А',
+        names: {
+          ua: 'Дошка підлоги шпунтована (масив)',
+          ru: 'Доска пола шпунтованная (массив)',
+          en: 'Tongue & Groove Solid Floorboard'
+        }
+      }
+    ];
+
+    const translations = {
+      ua: {
+        logo_sub: 'ПИЛОМАТЕРІАЛИ',
+        nav_quality: 'Якість та сушка',
+        nav_catalog: 'Асортимент',
+        nav_warehouse: 'Склад у Києві',
+        nav_contacts: 'Контакти',
+        nav_address: 'м. Київ, Дніпровська набережна, 17е',
+        nav_price_btn: 'ПРАЙС-ЛИСТ',
+        hud_scanner: 'ЛАЗЕРНИЙ КОНТРОЛЬ ПАРТІЇ:',
+        hud_species_label: 'ПОРОДА:',
+        hud_moisture_label: 'ВОЛОГІСТЬ:',
+        hud_thickness_label: 'ПЕРЕРІЗ:',
+        hud_calc_btn: 'КАЛЬКУЛЯТОР М³',
+        hero_badge: 'СУХА ТА НЕОБРІЗНА ДОШКА • КИЇВ',
+        hero_title_1: 'АПОЛЛО — ОДИН З НАЙБІЛЬШИХ СКЛАДІВ',
+        hero_title_2: 'ПИЛОМАТЕРІАЛІВ В УКРАЇНІ',
+        hero_subtitle: 'Понад 4 500 м³ добірної столярної та будівельної деревини камерної сушки (8–10%) у постійній наявності на Лівому березі Києва (Дніпровська набережна, 17е). Чесне поярусне точкування кожної дошки, продаж від 1 дошки до фурних партій.',
+        hero_cta_price: 'ВІДКРИТИ ПРАЙС-ЛИСТ',
+        hero_cta_contact: "ЗВ'ЯЗАТИСЯ ЗІ СКЛАДОМ",
+        hero_stat_1: 'Камерна вологість',
+        hero_stat_2: 'В наявності у Києві',
+        hero_stat_3: 'Калібрована товщина',
+        hero_3d_badge: '3D ІНСПЕКЦІЯ ШТАБЕЛЯ',
+        hero_3d_desc: 'Гортайте сторінку вниз, щоб розкласти штабель необрізної та сухої дошки в повітрі та дослідити текстуру, обзол і геометрію розпилу.',
+        hero_scroll_hint: 'ПРОКРУТІТЬ ДЛЯ ДЕТАЛІЗАЦІЇ',
+        sec2_badge: 'ІНЖЕНЕРНА АНАТОМІЯ ДОШКИ',
+        sec2_title_1: 'НЕОБРІЗНА ТА СУХА ДОШКА',
+        sec2_title_2: 'СТОЛЯРНОЇ ЯКОСТІ',
+        sec2_desc: 'Кожна партія проходить м’який цикл у конвекційних сушильних камерах із комп’ютерним контролем внутрішньої напруги. Дошка не має внутрішніх тріщин, зберігає природну щільність і живий край (обзол) для преміальних меблів, сходів та слебів.',
+        sec2_feat1_title: 'КАМЕРНА СУШКА 8–10% (БЕЗ ВНУТРІШНІХ НАПРУЖЕНЬ)',
+        sec2_feat1_desc: 'Ідеальна вологість для склеювання меблевого щита, виготовлення сходів, дверей та стільниць. Перевірка голчастим та безконтактним вологоміром при відвантаженні.',
+        sec2_feat2_title: 'ЧЕСНЕ ПОЯРУСНЕ ТОЧКУВАННЯ КОЖНОЇ ДОШКИ',
+        sec2_feat2_desc: 'Ви платите виключно за чистий корисний об’єм ділової деревини. Прозорий обмір ширини по середині пласти без урахування кори (обзолу) у присутності клієнта.',
+        sec2_feat3_title: 'ДОБІРНИЙ ЛІС ЕКСТРА / I ГАТУНОК (25, 32, 40, 50 ММ)',
+        sec2_feat3_desc: 'Широка палуба (від 180 до 450+ мм), рівномірний радіальний і тангенціальний розпил, мінімальна кількість сучків та чітка геометрія по всій довжині 3.0–4.5 м.',
+        sec2_card_tag: 'СПЕЦИФІКАЦІЯ РОЗПИЛУ',
+        sec2_card_title: 'ЖИВИЙ КРАЙ (LIVE-EDGE) ТА КАЛІБРОВАНА ПЛАСТЬ',
+        sec2_card_text: 'На 3D-сцені представлено центральну дошку зі штабеля «Аполло» в режимі вибух-схеми: ідеальна площина розпилу та натуральний захисний обзол по кромці.',
+        sec2_spec_t: 'ТОВЩИНА:',
+        sec2_spec_l: 'ДОВЖИНА:',
+        sec3_badge: 'ФІРМОВИЙ АСОРТИМЕНТ СКЛАДУ',
+        sec3_title: 'ПОРОДИ ДЕРЕВИНИ ТА ПРОФІЛІ В НАЯВНОСТІ',
+        sec3_switcher_label: 'ЗМІНИТИ ПОРОДУ 3D-ШТАБЕЛЯ НА СЦЕНІ:',
+        species_oak: 'ДУБ',
+        species_ash: 'ЯСЕН',
+        species_alder: 'ВІЛЬХА',
+        species_pine: 'СОСНА',
+        card1_tag: 'ХІТ СКЛАДУ • СУХА 8-10%',
+        card1_desc: 'Добірна столярна необрізна дошка дуба, ясена, вільхи та сосни. Камерна сушка, збережений природний обзол, широка палуба для меблів та сходів.',
+        card1_title: 'НЕОБРІЗНА ДОШКА',
+        card1_price: 'від 9 800 грн / м³',
+        card2_tag: 'КАЛІБРОВАНА • КАМЕРНА',
+        card2_desc: 'Суха обрізна та стругана дошка камерної сушки з чітким прямокутним перерізом без обзолу. Готова до столярної обробки та будівництва.',
+        card2_title: 'СУХА ДОШКА',
+        card2_price: 'від 11 500 грн / м³',
+        card3_tag: 'ІДЕАЛЬНА ГЕОМЕТРІЯ',
+        card3_desc: 'Сухий струганий та калібрований брус для пергол, каркасного домобудування, покрівлі та дизайнерських перегородок. Чотиристороннє стругання.',
+        card3_title: 'БРУС СТРУГАНИЙ',
+        card3_price: 'від 12 400 грн / м³',
+        card4_tag: 'ВЕЛЬВЕТ / ГЛАДКА',
+        card4_desc: 'Натуральна терасна та палубна дошка (модрина, термоясен, дуб, сосна) з протиковзним профілем «Вельвет» або гладкою фаскою для терас та басейнів.',
+        card4_title: 'ТЕРАСНА ДОШКА',
+        card4_price: 'від 680 грн / м²',
+        card5_tag: 'ЄВРОВАГОНКА • ШТИЛЬ',
+        card5_desc: "Дерев'яна вагонка (вільха, липа, сосна, ясен), фальш-брус та блок-хаус для внутрішнього оздоблення, саун, лазень та фасадів.",
+        card5_title: 'ВАГОНКА',
+        card5_price: 'від 390 грн / м²',
+        card6_tag: 'ШПУНТОВАНА • МАСИВ',
+        card6_desc: 'Масивна шпунтована дошка підлоги камерної сушки з термокомпенсаційними пазами на тильній стороні. Ідеальне стикування шип-паз без щілин.',
+        card6_title: 'ДОШКА ПІДЛОГИ',
+        card6_price: 'від 640 грн / м²',
+        sec4_badge: 'МАСШТАБ ТА ЛОГІСТИКА • КИЇВ, ЛІВИЙ БЕРЕГ',
+        sec4_title_1: 'СКЛАД «АПОЛЛО» НА',
+        sec4_title_2: 'ДНІПРОВСЬКІЙ НАБЕРЕЖНІЙ, 17Е',
+        sec4_desc: 'Ми підтримуємо один із найбільших запасів сухої столярної та необрізної дошки в Україні. Закриті сухі ангари, власні лінії торцювання та механізоване завантаження дозволяють відвантажувати як одну дошку для майстерні, так і повноцінні фури 22 тонни в день звернення.',
+        sec4_adv1_t: 'Опт та роздріб від 1 дошки',
+        sec4_adv1_d: 'Особистий відбір кожної дошки на складі разом із майстром або дистанційний відеовідбір партії.',
+        sec4_adv2_t: 'Зручний заїзд для фур та авто',
+        sec4_adv2_d: "Асфальтований під'їзд на Дніпровській набережній, 17е. Швидке верхнє та бокове навантаження навантажувачем.",
+        sec4_adv3_t: 'Криті вентильовані склади',
+        sec4_adv3_d: 'Дошка зберігається у правильних штабелях на сухих прокладках без набору атмосферної вологи.',
+        sec4_adv4_t: 'Доставка по Києву та Україні',
+        sec4_adv4_d: 'Оперативна подача власного транспорту від 1.5 до 22 тонн або самовивіз зі складу за 15 хвилин.',
+        sec4_metrics_title: 'ПОКАЗНИКИ СКЛАДУ АПОЛЛО',
+        sec4_m1: 'м³ пиломатеріалів постійно на складі',
+        sec4_m2: 'гарантована вологість столярної дошки',
+        sec4_m3: 'середній час обміру та завантаження',
+        sec4_m4: 'відповідність сортності Екстра / I гатунок',
+        sec4_cta: 'РОЗРАХУВАТИ ВАРТІСТЬ ПАРТІЇ',
+        sec5_arrow_badge: 'ЗАЇЗД НА СКЛАД • ЛІВИЙ БЕРЕГ',
+        sec5_title: 'ЧЕКАЄМО ВАС НА СКЛАДІ «АПОЛЛО»',
+        sec5_addr_label: 'АДРЕСА СКЛАДУ В КИЄВІ:',
+        sec5_addr_val: 'м. Київ, Дніпровська набережна, 17е',
+        sec5_hours: 'Пн–Сб: 08:30 – 18:00 • Самовивіз та доставка',
+        sec5_map_btn: 'ВІДКРИТИ GOOGLE MAPS ↗',
+        sec5_phone1_label: 'ВІДДІЛ ПРОДАЖУ ТА ВІДВАНТАЖЕННЯ:',
+        sec5_phone2_label: 'ОПТОВІ ПАРТІЇ ТА КОНСУЛЬТАЦІЯ:',
+        sec5_box_tag: 'ОНЛАЙН ПРАЙС ТА КАЛЬКУЛЯТОР М³',
+        sec5_box_title: 'ДІЗНАЙТЕСЯ АКТУАЛЬНУ ЦІНУ ТА НАЯВНІСТЬ ЗА 30 СЕКУНД',
+        sec5_box_desc: 'Відкрийте повний інтерактивний прайс-лист складу «Аполло» з розрахунком кубатури та кількості дощок по потрібній вам товщині (25, 32, 40, 50 мм).',
+        sec5_box_btn: 'ВІДКРИТИ ПРАЙС-ЛИСТ ТА КАЛЬКУЛЯТОР',
+        footer_rights: 'Один з найбільших складів пиломатеріалів в Україні.',
+        footer_loc: 'Київ, Дніпровська набережна, 17е • 096 000 00 76 • 068 538 69 23',
+        modal_title: 'ПРАЙС-ЛИСТ ТА КАЛЬКУЛЯТОР КУБАТУРИ «АПОЛЛО»',
+        modal_subtitle: 'Склад: м. Київ, Дніпровська набережна, 17е • Тел: 068 538 69 23, 096 000 00 76',
+        tab_all: 'Всі позиції',
+        tab_untrimmed: 'Необрізна дошка',
+        tab_kiln: 'Суха дошка та Брус',
+        tab_profiled: 'Терасна / Вагонка / Підлога',
+        modal_note: '* Поярусне точкування кожної дошки при клієнті',
+        th_item: 'Позиція та Порода',
+        th_dim: 'Товщина / Розмір',
+        th_moist: 'Вологість',
+        th_grade: 'Гатунок',
+        th_stock: 'Наявність у Києві',
+        th_price: 'Ціна',
+        th_action: 'Розрахунок',
+        stock_badge: 'В наявності (Дніпровська наб. 17е)',
+        order_btn: 'Обрати',
+        calc_badge: 'ШВИДКИЙ КАЛЬКУЛЯТОР ПАРТІЇ',
+        calc_label_item: 'Оберіть матеріал:',
+        calc_label_thick: 'Товщина дошки:',
+        calc_label_vol: "Об'єм (м³ або м²):",
+        calc_est_boards: 'Орієнтовна к-сть дощок (4.0м):',
+        calc_total_label: 'ОРІЄНТОВНА СУМА:',
+        unit_uah: 'грн',
+        unit_pcs: 'шт.'
+      },
+      ru: {
+        logo_sub: 'ПИЛОМАТЕРИАЛЫ',
+        nav_quality: 'Качество и сушка',
+        nav_catalog: 'Ассортимент',
+        nav_warehouse: 'Склад в Киеве',
+        nav_contacts: 'Контакты',
+        nav_address: 'г. Киев, Днепровская набережная, 17е',
+        nav_price_btn: 'ПРАЙС-ЛИСТ',
+        hud_scanner: 'ЛАЗЕРНЫЙ КОНТРОЛЬ ПАРТИИ:',
+        hud_species_label: 'ПОРОДА:',
+        hud_moisture_label: 'ВЛАЖНОСТЬ:',
+        hud_thickness_label: 'СЕЧЕНИЕ:',
+        hud_calc_btn: 'КАЛЬКУЛЯТОР М³',
+        hero_badge: 'СУХАЯ И НЕОБРЕЗНАЯ ДОСКА • КИЕВ',
+        hero_title_1: 'АПОЛЛО — ОДИН ИЗ КРУПНЕЙШИХ СКЛАДОВ',
+        hero_title_2: 'ПИЛОМАТЕРИАЛОВ В УКРАИНЕ',
+        hero_subtitle: 'Более 4 500 м³ отборной столярной и строительной древесины камерной сушки (8–10%) в постоянном наличии на Левом берегу Киева (Днепровская набережная, 17е). Честная поярусная точковка каждой доски, продажа от 1 доски до фурных партий.',
+        hero_cta_price: 'ОТКРЫТЬ ПРАЙС-ЛИСТ',
+        hero_cta_contact: 'СВЯЗАТЬСЯ СО СКЛАДОМ',
+        hero_stat_1: 'Камерная влажность',
+        hero_stat_2: 'В наличии в Киеве',
+        hero_stat_3: 'Калиброванная толщина',
+        hero_3d_badge: '3D ИНСПЕКЦИЯ ШТАБЕЛЯ',
+        hero_3d_desc: 'Листайте страницу вниз, чтобы разложить штабель необрезной и сухой доски в воздухе и исследовать текстуру, обзол и геометрию распила.',
+        hero_scroll_hint: 'ПРОКРУТИТЕ ДЛЯ ДЕТАЛИЗАЦИИ',
+        sec2_badge: 'ИНЖЕНЕРНАЯ АНАТОМИЯ ДОСКИ',
+        sec2_title_1: 'НЕОБРЕЗНАЯ И СУХАЯ ДОСКА',
+        sec2_title_2: 'СТОЛЯРНОГО КАЧЕСТВА',
+        sec2_desc: 'Каждая партия проходит мягкий цикл в конвекционных сушильных камерах с компьютерным контролем внутреннего напряжения. Доска без внутренних трещин, сохраняет природную плотность и живой край (обзол) для премиальной мебели, лестниц и слэбов.',
+        sec2_feat1_title: 'КАМЕРНАЯ СУШКА 8–10% (БЕЗ ВНУТРЕННИХ НАПРЯЖЕНИЙ)',
+        sec2_feat1_desc: 'Идеальная влажность для склейки мебельного щита, изготовления лестниц, дверей и столешниц. Проверка игольчатым и бесконтактным влагомером при отгрузке.',
+        sec2_feat2_title: 'ЧЕСТНАЯ ПОЯРУСНАЯ ТОЧКОВКА КАЖДОЙ ДОСКИ',
+        sec2_feat2_desc: 'Вы платите исключительно за чистый полезный объем деловой древесины. Прозрачный обмер ширины по середине пласти без учета коры (обзола) в присутствии клиента.',
+        sec2_feat3_title: 'ОТБОРНЫЙ ЛЕС ЭКСТРА / I СОРТ (25, 32, 40, 50 ММ)',
+        sec2_feat3_desc: 'Широкая палуба (от 180 до 450+ мм), равномерный радиальный и тангенциальный распил, минимальное количество сучков и четкая геометрия по всей длине 3.0–4.5 м.',
+        sec2_card_tag: 'СПЕЦИФИКАЦИЯ РАСПИЛА',
+        sec2_card_title: 'ЖИВОЙ КРАЙ (LIVE-EDGE) И КАЛИБРОВАННАЯ ПЛАСТЬ',
+        sec2_card_text: 'На 3D-сцене представлена центральная доска из штабеля «Аполло» в режиме взрыв-схемы: идеальная плоскость распила и натуральный защитный обзол по кромке.',
+        sec2_spec_t: 'ТОЛЩИНА:',
+        sec2_spec_l: 'ДЛИНА:',
+        sec3_badge: 'ФИРМЕННЫЙ АССОРТИМЕНТ СКЛАДА',
+        sec3_title: 'ПОРОДЫ ДРЕВЕСИНЫ И ПРОФИЛИ В НАЛИЧИИ',
+        sec3_switcher_label: 'СМЕНИТЬ ПОРОДУ 3D-ШТАБЕЛЯ НА СЦЕНЕ:',
+        species_oak: 'ДУБ',
+        species_ash: 'ЯСЕНЬ',
+        species_alder: 'ОЛЬХА',
+        species_pine: 'СОСНА',
+        card1_tag: 'ХИТ СКЛАДА • СУХАЯ 8-10%',
+        card1_desc: 'Отборная столярная необрезная доска дуба, ясеня, ольхи и сосны. Камерная сушка, сохраненный природный обзол, широкая палуба для мебели и лестниц.',
+        card1_title: 'НЕОБРЕЗНАЯ ДОСКА',
+        card1_price: 'от 9 800 грн / м³',
+        card2_tag: 'КАЛИБРОВАННАЯ • КАМЕРНАЯ',
+        card2_desc: 'Сухая обрезная и строганная доска камерной сушки с четким прямоугольным сечением без обзола. Готова к столярной обработке и строительству.',
+        card2_title: 'СУХАЯ ДОСКА',
+        card2_price: 'от 11 500 грн / м³',
+        card3_tag: 'ИДЕАЛЬНАЯ ГЕОМЕТРИЯ',
+        card3_desc: 'Сухой строганный и калиброванный брус для пергол, каркасного домостроения, кровли и дизайнерских перегородок. Четырехсторонняя строжка.',
+        card3_title: 'БРУС СТРОГАННЫЙ',
+        card3_price: 'от 12 400 грн / м³',
+        card4_tag: 'ВЕЛЬВЕТ / ГЛАДКАЯ',
+        card4_desc: 'Натуральная террасная и палубная доска (лиственница, термоясень, дуб, сосна) с противоскользящим профилем «Вельвет» или гладкой фаской для террас и бассейнов.',
+        card4_title: 'ТЕРРАСНАЯ ДОСКА',
+        card4_price: 'от 680 грн / м²',
+        card5_tag: 'ЕВРОВАГОНКА • ШТИЛЬ',
+        card5_desc: 'Деревянная вагонка (ольха, липа, сосна, ясень), фальш-брус и блок-хаус для внутренней отделки, саун, бань и фасадов.',
+        card5_title: 'ВАГОНКА',
+        card5_price: 'от 390 грн / м²',
+        card6_tag: 'ШПУНТОВАННАЯ • МАССИВ',
+        card6_desc: 'Массивная шпунтованная доска пола камерной сушки с термокомпенсационными пазами на тыльной стороне. Идеальная стыковка шип-паз без щелей.',
+        card6_title: 'ДОСКА ПОЛА',
+        card6_price: 'от 640 грн / м²',
+        sec4_badge: 'МАСШТАБ И ЛОГИСТИКА • КИЕВ, ЛЕВЫЙ БЕРЕГ',
+        sec4_title_1: 'СКЛАД «АПОЛЛО» НА',
+        sec4_title_2: 'ДНЕПРОВСКОЙ НАБЕРЕЖНОЙ, 17Е',
+        sec4_desc: 'Мы поддерживаем один из крупнейших запасов сухой столярной и необрезной доски в Украине. Закрытые сухие ангары, собственные линии торцовки и механизированная погрузка позволяют отгружать как одну доску для мастерской, так и полноценные фуры 22 тонны в день обращения.',
+        sec4_adv1_t: 'Опт и розница от 1 доски',
+        sec4_adv1_d: 'Личный отбор каждой доски на складе вместе с мастером или дистанционный видеоотбор партии.',
+        sec4_adv2_t: 'Удобный заезд для фур и авто',
+        sec4_adv2_d: 'Асфальтированный подъезд на Днепровской набережной, 17е. Быстрая верхняя и боковая погрузка погрузчиком.',
+        sec4_adv3_t: 'Крытые вентилируемые склады',
+        sec4_adv3_d: 'Доска хранится в правильных штабелях на сухих прокладках без набора атмосферной влаги.',
+        sec4_adv4_t: 'Доставка по Киеву и Украине',
+        sec4_adv4_d: 'Оперативная подача собственного транспорта от 1.5 до 22 тонн или самовывоз со склада за 15 минут.',
+        sec4_metrics_title: 'ПОКАЗАТЕЛИ СКЛАДА АПОЛЛО',
+        sec4_m1: 'м³ пиломатериалов постоянно на складе',
+        sec4_m2: 'гарантированная влажность столярной доски',
+        sec4_m3: 'среднее время обмера и погрузки',
+        sec4_m4: 'соответствие сортности Экстра / I сорт',
+        sec4_cta: 'РАССЧИТАТЬ СТОИМОСТЬ ПАРТИИ',
+        sec5_arrow_badge: 'ЗАЕЗД НА СКЛАД • ЛЕВЫЙ БЕРЕГ',
+        sec5_title: 'ЖДЕМ ВАС НА СКЛАДЕ «АПОЛЛО»',
+        sec5_addr_label: 'АДРЕС СКЛАДА В КИЕВЕ:',
+        sec5_addr_val: 'г. Киев, Днепровская набережная, 17е',
+        sec5_hours: 'Пн–Сб: 08:30 – 18:00 • Самовывоз и доставка',
+        sec5_map_btn: 'ОТКРЫТЬ GOOGLE MAPS ↗',
+        sec5_phone1_label: 'ОТДЕЛ ПРОДАЖ И ОТГРУЗКИ:',
+        sec5_phone2_label: 'ОПТОВЫЕ ПАРТИИ И КОНСУЛЬТАЦИЯ:',
+        sec5_box_tag: 'ОНЛАЙН ПРАЙС И КАЛЬКУЛЯТОР М³',
+        sec5_box_title: 'УЗНАЙТЕ АКТУАЛЬНУЮ ЦЕНУ И НАЛИЧИЕ ЗА 30 СЕКУНД',
+        sec5_box_desc: 'Откройте полный интерактивный прайс-лист склада «Аполло» с расчетом кубатуры и количества досок по нужной вам толщине (25, 32, 40, 50 мм).',
+        sec5_box_btn: 'ОТКРЫТЬ ПРАЙС-ЛИСТ И КАЛЬКУЛЯТОР',
+        footer_rights: 'Один из крупнейших складов пиломатериалов в Украине.',
+        footer_loc: 'Киев, Днепровская набережная, 17е • 096 000 00 76 • 068 538 69 23',
+        modal_title: 'ПРАЙС-ЛИСТ И КАЛЬКУЛЯТОР КУБАТУРЫ «АПОЛЛО»',
+        modal_subtitle: 'Склад: г. Киев, Днепровская набережная, 17е • Тел: 068 538 69 23, 096 000 00 76',
+        tab_all: 'Все позиции',
+        tab_untrimmed: 'Необрезная доска',
+        tab_kiln: 'Сухая доска и Брус',
+        tab_profiled: 'Террасная / Вагонка / Пол',
+        modal_note: '* Поярусная точковка каждой доски при клиенте',
+        th_item: 'Позиция и Порода',
+        th_dim: 'Толщина / Размер',
+        th_moist: 'Влажность',
+        th_grade: 'Сорт',
+        th_stock: 'Наличие в Киеве',
+        th_price: 'Цена',
+        th_action: 'Расчет',
+        stock_badge: 'В наличии (Днепровская наб. 17е)',
+        order_btn: 'Выбрать',
+        calc_badge: 'БЫСТРЫЙ КАЛЬКУЛЯТОР ПАРТИИ',
+        calc_label_item: 'Выберите материал:',
+        calc_label_thick: 'Толщина доски:',
+        calc_label_vol: 'Объем (м³ или м²):',
+        calc_est_boards: 'Ориентировочное кол-во досок (4.0м):',
+        calc_total_label: 'ОРИЕНТИРОВОЧНАЯ СУММА:',
+        unit_uah: 'грн',
+        unit_pcs: 'шт.'
+      },
+      en: {
+        logo_sub: 'TIMBER & LUMBER',
+        nav_quality: 'Kiln Quality',
+        nav_catalog: 'Assortment',
+        nav_warehouse: 'Kyiv Warehouse',
+        nav_contacts: 'Contacts',
+        nav_address: 'Kyiv, Dniprovska Naberezhna, 17e',
+        nav_price_btn: 'PRICE LIST',
+        hud_scanner: 'LASER BATCH TELEMETRY:',
+        hud_species_label: 'SPECIES:',
+        hud_moisture_label: 'MOISTURE:',
+        hud_thickness_label: 'SECTION:',
+        hud_calc_btn: 'M³ CALCULATOR',
+        hero_badge: 'KILN-DRIED & LIVE-EDGE TIMBER • KYIV',
+        hero_title_1: 'APOLLO — ONE OF THE LARGEST TIMBER',
+        hero_title_2: 'WAREHOUSES IN UKRAINE',
+        hero_subtitle: 'Over 4,500 m³ of select kiln-dried (8–10% moisture) carpentry and structural lumber permanently in stock on the Left Bank of Kyiv (Dniprovska Naberezhna, 17e). Honest piece-by-piece measurement, retail from 1 board to full 22t truckloads.',
+        hero_cta_price: 'OPEN PRICE LIST',
+        hero_cta_contact: 'CONTACT WAREHOUSE',
+        hero_stat_1: 'Kiln-dried moisture',
+        hero_stat_2: 'In stock in Kyiv',
+        hero_stat_3: 'Calibrated thickness',
+        hero_3d_badge: '3D TIMBER STACK INSPECTION',
+        hero_3d_desc: 'Scroll down to explode the live-edge timber stack in mid-air and inspect wood grain fibers, natural bark wane, and sawing geometry.',
+        hero_scroll_hint: 'SCROLL TO INSPECT STACK',
+        sec2_badge: 'TIMBER ENGINEERING ANATOMY',
+        sec2_title_1: 'LIVE-EDGE & KILN-DRIED',
+        sec2_title_2: 'CARPENTRY GRADE SLABS',
+        sec2_desc: 'Every batch undergoes a gentle computer-controlled drying cycle in convection kilns to eliminate internal stress. Zero internal cracking, preserved natural density, and authentic live-edge bark for bespoke furniture, stairs, and slabs.',
+        sec2_feat1_title: 'KILN DRYING 8–10% (STRESS-FREE CORE)',
+        sec2_feat1_desc: 'Optimal moisture content for edge-gluing panels, stairs, doors, and countertops. Verified with pin and pinless moisture meters upon loading.',
+        sec2_feat2_title: 'HONEST PIECE-BY-PIECE TIERED MEASUREMENT',
+        sec2_feat2_desc: 'You pay strictly for net usable hardwood volume. Transparent mid-length width measurement excluding bark wane in the client’s presence.',
+        sec2_feat3_title: 'SELECT GRADE EXTRA / I (25, 32, 40, 50 MM)',
+        sec2_feat3_desc: 'Wide faces (180 to 450+ mm), consistent radial and tangential grain, minimal knots, and strict thickness calibration across 3.0–4.5 m lengths.',
+        sec2_card_tag: 'SAWING SPECIFICATION',
+        sec2_card_title: 'ORGANIC LIVE-EDGE & CALIBRATED FACES',
+        sec2_card_text: 'The 3D scene displays the center slab from the Apollo stack in exploded view: crisp sawn golden faces and organic protective bark along the edges.',
+        sec2_spec_t: 'THICKNESS:',
+        sec2_spec_l: 'LENGTH:',
+        sec3_badge: 'SIGNATURE WAREHOUSE ASSORTMENT',
+        sec3_title: 'WOOD SPECIES & PROFILES IN STOCK',
+        sec3_switcher_label: 'SWITCH 3D TIMBER SPECIES IN REAL TIME:',
+        species_oak: 'OAK',
+        species_ash: 'ASH',
+        species_alder: 'ALDER',
+        species_pine: 'PINE',
+        card1_tag: 'BESTSELLER • KILN 8-10%',
+        card1_desc: 'Select carpentry live-edge slabs in Oak, Ash, Alder, and Pine. Kiln-dried, authentic bark edges, wide boards for tables and staircases.',
+        card1_title: 'LIVE-EDGE TIMBER',
+        card1_price: 'from 9,800 UAH / m³',
+        card2_tag: 'CALIBRATED • KILN-DRIED',
+        card2_desc: 'Kiln-dried square-edged and planed boards with crisp rectangular cross-sections free of wane. Ready for joinery and construction.',
+        card2_title: 'KILN-DRIED BOARD',
+        card2_price: 'from 11,500 UAH / m³',
+        card3_tag: 'PRECISION GEOMETRY',
+        card3_desc: 'Dry four-side planed and calibrated structural beams for pergolas, timber framing, roofing, and architectural partitions.',
+        card3_title: 'PLANED TIMBER BEAM',
+        card3_price: 'from 12,400 UAH / m³',
+        card4_tag: 'RIBBED / SMOOTH DECKING',
+        card4_desc: 'Natural terrace and decking boards (Larch, Thermo-Ash, Oak, Pine) with anti-slip ribbed profile or smooth chamfered edges.',
+        card4_title: 'TERRACE DECKING',
+        card4_price: 'from 680 UAH / m²',
+        card5_tag: 'EURO-PROFILE • SHTIL',
+        card5_desc: 'Wooden wall & ceiling lining (Alder, Linden, Pine, Ash), faux-beam, and block-house for interiors, saunas, and facades.',
+        card5_title: 'WOOD CLADDING',
+        card5_price: 'from 390 UAH / m²',
+        card6_tag: 'TONGUE & GROOVE • SOLID',
+        card6_desc: 'Solid kiln-dried tongue-and-groove floorboards with stress-relief back grooves for gap-free installation.',
+        card6_title: 'SOLID FLOORBOARD',
+        card6_price: 'from 640 UAH / m²',
+        sec4_badge: 'SCALE & LOGISTICS • KYIV LEFT BANK',
+        sec4_title_1: 'APOLLO WAREHOUSE AT',
+        sec4_title_2: 'DNIPROVSKA NABEREZHNA, 17E',
+        sec4_desc: 'We maintain one of the largest stocks of kiln-dried carpentry and live-edge lumber in Ukraine. Covered dry hangars, dedicated trimming lines, and forklift loading allow us to dispatch anything from a single board to full 22-ton trucks on the same day.',
+        sec4_adv1_t: 'Wholesale & Retail from 1 Board',
+        sec4_adv1_d: 'Hand-pick every board at our warehouse with a specialist or request remote video selection.',
+        sec4_adv2_t: 'Easy Heavy-Truck & Car Access',
+        sec4_adv2_d: 'Paved access at Dniprovska Naberezhna, 17e. Fast top and side forklift loading.',
+        sec4_adv3_t: 'Covered Ventilated Hangars',
+        sec4_adv3_d: 'Lumber is stored on dry kiln stickers in proper stacks without absorbing ambient moisture.',
+        sec4_adv4_t: 'Delivery Across Kyiv & Ukraine',
+        sec4_adv4_d: 'Prompt dispatch via our fleet (1.5t to 22t trucks) or self-pickup in 15 minutes.',
+        sec4_metrics_title: 'APOLLO WAREHOUSE METRICS',
+        sec4_m1: 'm³ of timber permanently in stock',
+        sec4_m2: 'guaranteed carpentry board moisture',
+        sec4_m3: 'average measurement & loading time',
+        sec4_m4: 'Extra / Grade I compliance',
+        sec4_cta: 'CALCULATE BATCH COST',
+        sec5_arrow_badge: 'WAREHOUSE ENTRANCE • LEFT BANK',
+        sec5_title: 'VISIT APOLLO TIMBER WAREHOUSE',
+        sec5_addr_label: 'KYIV WAREHOUSE ADDRESS:',
+        sec5_addr_val: 'Kyiv, Dniprovska Naberezhna, 17e',
+        sec5_hours: 'Mon–Sat: 08:30 – 18:00 • Pickup & Delivery',
+        sec5_map_btn: 'OPEN IN GOOGLE MAPS ↗',
+        sec5_phone1_label: 'SALES & DISPATCH DESK:',
+        sec5_phone2_label: 'WHOLESALE & CONSULTATION:',
+        sec5_box_tag: 'ONLINE PRICE LIST & M³ CALCULATOR',
+        sec5_box_title: 'CHECK LIVE PRICES & STOCK IN 30 SECONDS',
+        sec5_box_desc: 'Open the full interactive Apollo price list with cubic meter and board count calculation by thickness (25, 32, 40, 50 mm).',
+        sec5_box_btn: 'OPEN PRICE LIST & CALCULATOR',
+        footer_rights: 'One of the largest timber warehouses in Ukraine.',
+        footer_loc: 'Kyiv, Dniprovska Naberezhna, 17e • 096 000 00 76 • 068 538 69 23',
+        modal_title: 'APOLLO PRICE LIST & CUBIC VOLUME CALCULATOR',
+        modal_subtitle: 'Warehouse: Kyiv, Dniprovska Naberezhna, 17e • Tel: 068 538 69 23, 096 000 00 76',
+        tab_all: 'All Items',
+        tab_untrimmed: 'Live-Edge Timber',
+        tab_kiln: 'Kiln Board & Beams',
+        tab_profiled: 'Decking / Cladding / Floor',
+        modal_note: '* Honest piece-by-piece measurement in client presence',
+        th_item: 'Product & Species',
+        th_dim: 'Thickness / Size',
+        th_moist: 'Moisture',
+        th_grade: 'Grade',
+        th_stock: 'Kyiv Stock',
+        th_price: 'Price',
+        th_action: 'Calculate',
+        stock_badge: 'In Stock (Dniprovska Nab. 17e)',
+        order_btn: 'Select',
+        calc_badge: 'INSTANT BATCH CALCULATOR',
+        calc_label_item: 'Select Material:',
+        calc_label_thick: 'Board Thickness:',
+        calc_label_vol: 'Volume (m³ or m²):',
+        calc_est_boards: 'Estimated boards (4.0m length):',
+        calc_total_label: 'ESTIMATED TOTAL:',
+        unit_uah: 'UAH',
+        unit_pcs: 'pcs'
+      }
+    };
+
+    let currentLang = 'ua';
+    let currentFilter = 'all';
+    let currentSpecies = 'oak';
+
+    /* =========================================================================
+       2. LANGUAGE SWITCHING & MODAL PRICE LIST LOGIC
+       ========================================================================= */
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.documentElement.lang = lang === 'ua' ? 'uk' : lang;
+
+      // Update active language button style
+      ['ua', 'ru', 'en'].forEach(code => {
+        const btn = document.getElementById(`lang-${code}`);
+        if (code === lang) {
+          btn.className = 'px-2 py-1 rounded font-bold transition-colors bg-apolloBronze text-white';
+        } else {
+          btn.className = 'px-2 py-1 rounded font-bold transition-colors text-warmCream/60 hover:text-white';
+        }
+      });
+
+      // Update all static data-i18n elements
+      const dict = translations[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.textContent = dict[key];
+        }
+      });
+
+      // Refresh HUD species text
+      updateSpeciesHUD(currentSpecies);
+
+      // Re-render Price Table & Calculator Select
+      renderPriceTable(currentFilter);
+      populateCalculatorSelect();
+      updateCalculator();
+    }
+
+    function renderPriceTable(category = 'all') {
+      currentFilter = category;
+      const tbody = document.getElementById('price-table-body');
+      const dict = translations[currentLang];
+
+      // Update filter button styles
+      ['all', 'untrimmed', 'kiln_dried', 'profiled'].forEach(cat => {
+        const tab = document.getElementById(`tab-${cat}`);
+        if (!tab) return;
+        if (cat === category) {
+          tab.className = 'price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-warmCream text-slateDeep transition-all';
+        } else {
+          tab.className = 'price-tab px-4 py-2 rounded-xl font-heading font-extrabold text-xs uppercase tracking-wider bg-slateDarker text-warmCream border border-warmCream/15 hover:border-timberGold transition-all';
+        }
+      });
+
+      const filtered = category === 'all'
+        ? priceItemsData
+        : priceItemsData.filter(item => item.category === category);
+
+      tbody.innerHTML = filtered.map(item => `
+        <tr class="hover:bg-warmCream/5 transition-colors">
+          <td class="py-3.5 px-4 font-sans font-bold text-white">${item.names[currentLang]}</td>
+          <td class="py-3.5 px-4 text-warmCream/80 text-xs">${item.dim}</td>
+          <td class="py-3.5 px-4 text-timberGold text-xs font-bold">${item.moist}</td>
+          <td class="py-3.5 px-4 text-warmCream text-xs">${item.grade}</td>
+          <td class="py-3.5 px-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[11px]">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              ${dict.stock_badge}
+            </span>
+          </td>
+          <td class="py-3.5 px-4 font-bold text-timberGold whitespace-nowrap">
+            ${item.price.toLocaleString('uk-UA')} ${dict.unit_uah} / ${item.unit}
+          </td>
+          <td class="py-3.5 px-4 text-right">
+            <button onclick="selectItemInCalculator('${item.id}')" class="px-3.5 py-1.5 rounded-lg bg-apolloBronze hover:bg-timberGold hover:text-slateDeep text-white font-heading font-bold text-xs uppercase transition-colors">
+              ${dict.order_btn} ↓
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function filterPriceTable(category) {
+      renderPriceTable(category);
+    }
+
+    function populateCalculatorSelect() {
+      const select = document.getElementById('calc-item-select');
+      const currentVal = select.value || 'oak_untrimmed';
+      const dict = translations[currentLang];
+
+      select.innerHTML = priceItemsData.map(item => `
+        <option value="${item.id}" ${item.id === currentVal ? 'selected' : ''}>
+          ${item.names[currentLang]} — ${item.price.toLocaleString('uk-UA')} ${dict.unit_uah}/${item.unit}
+        </option>
+      `).join('');
+    }
+
+    function selectItemInCalculator(itemId) {
+      const select = document.getElementById('calc-item-select');
+      select.value = itemId;
+      updateCalculator();
+      const calcBox = document.getElementById('calculator-box');
+      calcBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function adjustVolume(delta) {
+      const input = document.getElementById('calc-vol-input');
+      let val = parseFloat(input.value) || 1;
+      val = Math.max(0.5, Math.round((val + delta) * 10) / 10);
+      input.value = val;
+      updateCalculator();
+    }
+
+    function updateCalculator() {
+      const itemId = document.getElementById('calc-item-select').value;
+      const thickMm = parseFloat(document.getElementById('calc-thick-select').value) || 50;
+      const vol = Math.max(0.1, parseFloat(document.getElementById('calc-vol-input').value) || 1);
+      const dict = translations[currentLang];
+
+      const item = priceItemsData.find(i => i.id === itemId) || priceItemsData[0];
+      const total = Math.round(item.price * vol);
+
+      // Estimate number of boards assuming average 4.0m length and 0.28m width
+      const singleBoardVolume = (thickMm / 1000) * 0.28 * 4.0;
+      const boardsCount = item.unit === 'м³'
+        ? Math.max(1, Math.round(vol / singleBoardVolume))
+        : Math.max(1, Math.round(vol / (0.135 * 4.0)));
+
+      document.getElementById('calc-boards-count').textContent = `~${boardsCount} ${dict.unit_pcs}`;
+      document.getElementById('calc-total-price').textContent = `${total.toLocaleString('uk-UA')} ${dict.unit_uah}`;
+    }
+
+    function openPriceModal(defaultFilter = 'all') {
+      renderPriceTable(defaultFilter);
+      const modal = document.getElementById('price-modal');
+      modal.classList.remove('hidden-modal');
+      modal.classList.add('visible-modal');
+    }
+
+    function closePriceModal() {
+      const modal = document.getElementById('price-modal');
+      modal.classList.remove('visible-modal');
+      modal.classList.add('hidden-modal');
+    }
+
+    // Close modal on Escape or backdrop click
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closePriceModal();
+    });
+    document.getElementById('price-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'price-modal') closePriceModal();
+    });
+
+    /* =========================================================================
+       3. PROCEDURAL 3D WEBGL SCENE (THREE.JS r128)
+       - Procedural HTML5 Canvas Wood Grain & Bark Textures
+       - Custom Displaced Live-Edge Timber Slab Geometry (with Bark Wane)
+       - 6-Board Stack on Kiln Stickers + Laser Scanner + Golden Sawdust
+       ========================================================================= */
+    const speciesPresets = {
+      oak: {
+        baseHex: '#C88A3B',
+        grainDark: '#7D4E1D',
+        grainLight: '#E5A956',
+        density: '720 кг/м³',
+        moisture: '8.4%',
+        lightTint: 0xE0A14A,
+        names: { ua: 'ДУБ (QUERCUS)', ru: 'ДУБ (QUERCUS)', en: 'OAK (QUERCUS)' }
+      },
+      ash: {
+        baseHex: '#DFC18D',
+        grainDark: '#9B7842',
+        grainLight: '#F3DFB9',
+        density: '690 кг/м³',
+        moisture: '8.6%',
+        lightTint: 0xF3EDE2,
+        names: { ua: 'ЯСЕН (FRAXINUS)', ru: 'ЯСЕНЬ (FRAXINUS)', en: 'ASH (FRAXINUS)' }
+      },
+      alder: {
+        baseHex: '#C67544',
+        grainDark: '#7C3E1C',
+        grainLight: '#DF9464',
+        density: '530 кг/м³',
+        moisture: '8.2%',
+        lightTint: 0xD9824B,
+        names: { ua: 'ВІЛЬХА (ALNUS)', ru: 'ОЛЬХА (ALNUS)', en: 'ALDER (ALNUS)' }
+      },
+      pine: {
+        baseHex: '#E2AC54',
+        grainDark: '#9D6924',
+        grainLight: '#F4C97D',
+        density: '510 кг/м³',
+        moisture: '9.0%',
+        lightTint: 0xE8B960,
+        names: { ua: 'СОСНА (PINUS)', ru: 'СОСНА (PINUS)', en: 'PINE (PINUS)' }
+      }
+    };
+
+    // Procedural Wood Grain Texture Generator (Diffuse + Bump)
+    function createWoodTexture(speciesKey = 'oak') {
+      const preset = speciesPresets[speciesKey] || speciesPresets.oak;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 512;
+      const ctx = canvas.getContext('2d');
+
+      // Base warm timber gradient
+      const grad = ctx.createLinearGradient(0, 0, 1024, 512);
+      grad.addColorStop(0, preset.baseHex);
+      grad.addColorStop(0.5, preset.grainLight);
+      grad.addColorStop(1, preset.baseHex);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Longitudinal wood fibers & cathedral arches
+      for (let i = 0; i < 260; i++) {
+        const y = (i / 260) * 512;
+        ctx.beginPath();
+        ctx.strokeStyle = i % 3 === 0 ? preset.grainDark : preset.grainLight;
+        ctx.globalAlpha = 0.08 + (Math.sin(i * 0.37) * 0.05 + 0.05);
+        ctx.lineWidth = 1 + (i % 4) * 0.7;
+
+        ctx.moveTo(0, y);
+        for (let x = 0; x <= 1024; x += 32) {
+          const wave = Math.sin(x * 0.008 + i * 0.15) * 14 + Math.cos(x * 0.02 - i * 0.05) * 5;
+          ctx.lineTo(x, y + wave);
+        }
+        ctx.stroke();
+      }
+
+      // Subtle knots & heartwood rings
+      ctx.globalAlpha = 0.14;
+      for (let k = 0; k < 3; k++) {
+        const kx = 220 + k * 310;
+        const ky = 140 + (k % 2) * 210;
+        for (let r = 8; r < 95; r += 9) {
+          ctx.beginPath();
+          ctx.ellipse(kx, ky, r * 2.4, r * 0.45, 0.06, 0, Math.PI * 2);
+          ctx.strokeStyle = preset.grainDark;
+          ctx.lineWidth = 1.6;
+          ctx.stroke();
+        }
+      }
+
+      // Fine cross-saw marks (authentic sawmill texture)
+      ctx.globalAlpha = 0.04;
+      ctx.strokeStyle = '#13191C';
+      for (let sx = 0; sx < 1024; sx += 14) {
+        ctx.beginPath();
+        ctx.moveTo(sx, 0);
+        ctx.lineTo(sx + 4, 512);
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.anisotropy = 4;
+      return texture;
+    }
+
+    // Procedural Natural Bark Texture for Live-Edge Sides (Wane / Обзол)
+    function createBarkTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = '#2B1B10';
+      ctx.fillRect(0, 0, 512, 256);
+
+      for (let i = 0; i < 420; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 256;
+        const w = 18 + Math.random() * 65;
+        const h = 3 + Math.random() * 8;
+        ctx.fillStyle = i % 2 === 0 ? '#3A2618' : (i % 5 === 0 ? '#5C3B23' : '#1B110A');
+        ctx.globalAlpha = 0.45;
+        ctx.fillRect(x, y, w, h);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      return texture;
+    }
+
+    // Procedural End-Grain Texture (Торці дошки з річними кільцями)
+    function createEndGrainTexture(speciesKey = 'oak') {
+      const preset = speciesPresets[speciesKey] || speciesPresets.oak;
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = preset.baseHex;
+      ctx.fillRect(0, 0, 512, 128);
+
+      // Growth rings on end-grain
+      for (let r = 10; r < 420; r += 8) {
+        ctx.beginPath();
+        ctx.arc(256, 150, r, Math.PI, Math.PI * 2);
+        ctx.strokeStyle = r % 16 === 0 ? preset.grainDark : preset.grainLight;
+        ctx.lineWidth = 2.5;
+        ctx.globalAlpha = 0.35;
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      return texture;
+    }
+
+    // Build Authentic Live-Edge Timber Slab Geometry
+    function createLiveEdgeSlabGeometry(width, thickness, length, seed = 1) {
+      // High segment BoxGeometry so we can sculpt organic wavy live-edge bark along Z
+      const geom = new THREE.BoxGeometry(width, thickness, length, 36, 6, 84);
+      const pos = geom.attributes.position;
+      const halfW = width * 0.5;
+      const halfT = thickness * 0.5;
+
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+
+        // Normalized distance to left/right edge
+        const edgeRatio = Math.abs(x) / halfW;
+
+        if (edgeRatio > 0.72) {
+          const signX = Math.sign(x);
+          const edgeInfluence = (edgeRatio - 0.72) / 0.28; // 0..1 near outer bark edge
+
+          // Organic longitudinal wave along the board length (Z)
+          const wave =
+            Math.sin(z * 0.55 + seed * 1.9) * 0.14 +
+            Math.cos(z * 1.25 - seed * 0.8) * 0.07 +
+            Math.sin(z * 2.6 + seed * 3.1) * 0.03;
+
+          // Natural tree trunk bevel (wider at bottom, sloped wane on top edge)
+          const verticalNormalize = (y + halfT) / thickness; // 0 bottom .. 1 top
+          const barkSlope = -verticalNormalize * 0.18 * edgeInfluence;
+
+          // Bark roughness along Y
+          const barkCrag = Math.sin(y * 18 + z * 4 + seed) * 0.022 * edgeInfluence;
+
+          x += signX * (wave * edgeInfluence + barkSlope + barkCrag);
+        }
+
+        pos.setXYZ(i, x, y, z);
+      }
+
+      geom.computeVertexNormals();
+      return geom;
+    }
+
+    // Global Three.js references for dynamic species switching & GSAP
+    let scene, camera, renderer;
+    let stackGroup;
+    const timberSlabs = [];
+    const stickerGroups = [];
+    let woodMaterials = [];
+    let endGrainMaterials = [];
+    let laserLineMesh;
+    let keyLight, rimLight;
+    let mouseX = 0, mouseY = 0;
+
+    function initWebGL() {
+      const container = document.getElementById('webgl-container');
+      scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x13191C, 0.038);
+
+      camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+      camera.position.set(4.8, 2.7, 7.2);
+      camera.lookAt(0.4, 0, 0);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.12;
+      container.appendChild(renderer.domElement);
+
+      // Studio Lighting tailored to Apollo Brand Colors
+      const ambientLight = new THREE.AmbientLight(0xF3EDE2, 0.55);
+      scene.add(ambientLight);
+
+      keyLight = new THREE.DirectionalLight(0xE0A14A, 2.1);
+      keyLight.position.set(6, 9, 6);
+      keyLight.castShadow = true;
+      keyLight.shadow.mapSize.width = 1024;
+      keyLight.shadow.mapSize.height = 1024;
+      scene.add(keyLight);
+
+      rimLight = new THREE.DirectionalLight(0xA86A38, 1.35);
+      rimLight.position.set(-7, -4, -5);
+      scene.add(rimLight);
+
+      const coolFillLight = new THREE.DirectionalLight(0x4A6B7C, 0.65);
+      coolFillLight.position.set(-5, 6, 4);
+      scene.add(coolFillLight);
+
+      // Build Textures & Materials
+      const woodTex = createWoodTexture('oak');
+      const barkTex = createBarkTexture();
+      const endTex = createEndGrainTexture('oak');
+
+      const sawnFaceMat = new THREE.MeshStandardMaterial({
+        map: woodTex,
+        bumpMap: woodTex,
+        bumpScale: 0.018,
+        roughness: 0.46,
+        metalness: 0.06
+      });
+
+      const barkEdgeMat = new THREE.MeshStandardMaterial({
+        map: barkTex,
+        bumpMap: barkTex,
+        bumpScale: 0.05,
+        roughness: 0.88,
+        metalness: 0.02
+      });
+
+      const endGrainMat = new THREE.MeshStandardMaterial({
+        map: endTex,
+        bumpMap: endTex,
+        bumpScale: 0.025,
+        roughness: 0.6,
+        metalness: 0.04
+      });
+
+      woodMaterials.push(sawnFaceMat);
+      endGrainMaterials.push(endGrainMat);
+
+      // BoxGeometry material index order: [right(bark), left(bark), top(sawn), bottom(sawn), front(end), back(end)]
+      const slabMaterials = [
+        barkEdgeMat,
+        barkEdgeMat,
+        sawnFaceMat,
+        sawnFaceMat,
+        endGrainMat,
+        endGrainMat
+      ];
+
+      // Main Timber Stack Group (Positioned slightly to the right on desktop so left typography breathes)
+      stackGroup = new THREE.Group();
+      stackGroup.position.set(1.35, -0.15, 0);
+      stackGroup.rotation.set(0.08, -0.52, 0.02);
+      scene.add(stackGroup);
+
+      // Create 6 Live-Edge Timber Slabs stacked on Kiln Stickers (Прокладки)
+      const slabConfigs = [
+        { width: 2.35, thick: 0.22, len: 5.4, seed: 1.1, stepX: 0.18 },
+        { width: 2.50, thick: 0.24, len: 5.5, seed: 2.4, stepX: 0.08 },
+        { width: 2.65, thick: 0.25, len: 5.6, seed: 3.7, stepX: 0.00 }, // Hero Featured Center Slab (index 2)
+        { width: 2.45, thick: 0.23, len: 5.5, seed: 5.2, stepX: -0.06 },
+        { width: 2.25, thick: 0.21, len: 5.3, seed: 6.8, stepX: -0.14 },
+        { width: 2.00, thick: 0.20, len: 5.1, seed: 8.3, stepX: -0.22 }
+      ];
+
+      const stickerMat = new THREE.MeshStandardMaterial({
+        color: 0xE8E0D2,
+        roughness: 0.7
+      });
+
+      let currentY = -1.15;
+
+      slabConfigs.forEach((cfg, idx) => {
+        const slabGeo = createLiveEdgeSlabGeometry(cfg.width, cfg.thick, cfg.len, cfg.seed);
+        const slabMesh = new THREE.Mesh(slabGeo, slabMaterials);
+        slabMesh.castShadow = true;
+        slabMesh.receiveShadow = true;
+
+        const baseY = currentY + cfg.thick * 0.5;
+        slabMesh.position.set(cfg.stepX, baseY, 0);
+        slabMesh.userData = {
+          baseX: cfg.stepX,
+          baseY: baseY,
+          baseZ: 0,
+          index: idx
+        };
+
+        stackGroup.add(slabMesh);
+        timberSlabs.push(slabMesh);
+
+        currentY += cfg.thick;
+
+        // Add 3 wooden kiln stickers (прокладки для камерної сушки) between boards
+        if (idx < slabConfigs.length - 1) {
+          const stickerH = 0.065;
+          const sGroup = new THREE.Group();
+          sGroup.position.set(cfg.stepX, currentY + stickerH * 0.5, 0);
+          sGroup.userData = { baseY: currentY + stickerH * 0.5, index: idx };
+
+          [-1.8, 0, 1.8].forEach(zPos => {
+            const stGeo = new THREE.BoxGeometry(cfg.width * 0.92, stickerH, 0.11);
+            const stMesh = new THREE.Mesh(stGeo, stickerMat);
+            stMesh.position.z = zPos;
+            sGroup.add(stMesh);
+          });
+
+          stackGroup.add(sGroup);
+          stickerGroups.push(sGroup);
+          currentY += stickerH;
+        }
+      });
+
+      // Add Laser Measurement Scan Ring around the Stack
+      const laserGeo = new THREE.RingGeometry(1.65, 1.69, 4);
+      const laserMat = new THREE.MeshBasicMaterial({
+        color: 0xE0A14A,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.65
+      });
+      laserLineMesh = new THREE.Mesh(laserGeo, laserMat);
+      laserLineMesh.rotation.z = Math.PI / 4;
+      stackGroup.add(laserLineMesh);
+
+      // Atmospheric Floating Golden Sawdust Particles
+      const particleCount = 260;
+      const pGeo = new THREE.BufferGeometry();
+      const pPositions = new Float32Array(particleCount * 3);
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        pPositions[i] = (Math.random() - 0.5) * 16;
+        pPositions[i + 1] = (Math.random() - 0.5) * 10;
+        pPositions[i + 2] = (Math.random() - 0.5) * 12;
+      }
+      pGeo.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+      const pMat = new THREE.PointsMaterial({
+        color: 0xE0A14A,
+        size: 0.045,
+        transparent: true,
+        opacity: 0.55
+      });
+      const sawdustParticles = new THREE.Points(pGeo, pMat);
+      scene.add(sawdustParticles);
+
+      // Subtle Mouse Parallax
+      window.addEventListener('mousemove', (e) => {
+        mouseX = (e.clientX / window.innerWidth - 0.5) * 2;
+        mouseY = (e.clientY / window.innerHeight - 0.5) * 2;
+      });
+
+      // Responsive Resize
+      window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        // Adjust stack X offset on mobile screens so it stays centered
+        if (window.innerWidth < 1024) {
+          stackGroup.position.x = 0;
+        } else {
+          stackGroup.position.x = 1.35;
+        }
+      });
+      if (window.innerWidth < 1024) {
+        stackGroup.position.x = 0;
+      }
+
+      // Render Loop
+      const clock = new THREE.Clock();
+      function animate() {
+        requestAnimationFrame(animate);
+        const elapsed = clock.getElapsedTime();
+
+        // Laser scan line travels along the 4.5m board length
+        if (laserLineMesh) {
+          laserLineMesh.position.z = Math.sin(elapsed * 1.15) * 2.55;
+        }
+
+        // Gentle sawdust drift
+        sawdustParticles.rotation.y = elapsed * 0.025;
+        sawdustParticles.position.y = Math.sin(elapsed * 0.4) * 0.15;
+
+        // Subtle interactive mouse tilt on stack
+        stackGroup.rotation.x += ((0.08 + mouseY * 0.06) - stackGroup.rotation.x) * 0.05;
+
+        renderer.render(scene, camera);
+      }
+      animate();
+    }
+
+    // Real-time 3D Wood Species Switcher (Oak, Ash, Alder, Pine)
+    function switchWoodSpecies(speciesKey) {
+      currentSpecies = speciesKey;
+      const preset = speciesPresets[speciesKey] || speciesPresets.oak;
+
+      // Update active button UI
+      ['oak', 'ash', 'alder', 'pine'].forEach(key => {
+        const btn = document.getElementById(`btn-species-${key}`);
+        if (!btn) return;
+        if (key === speciesKey) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+
+      // Regenerate procedural wood and end-grain textures for the chosen species
+      const newWoodTex = createWoodTexture(speciesKey);
+      const newEndTex = createEndGrainTexture(speciesKey);
+
+      woodMaterials.forEach(mat => {
+        mat.map = newWoodTex;
+        mat.bumpMap = newWoodTex;
+        mat.needsUpdate = true;
+      });
+
+      endGrainMaterials.forEach(mat => {
+        mat.map = newEndTex;
+        mat.bumpMap = newEndTex;
+        mat.needsUpdate = true;
+      });
+
+      // Animate key light tint and subtle board pulse
+      if (keyLight) {
+        gsap.to(keyLight.color, {
+          r: ((preset.lightTint >> 16) & 255) / 255,
+          g: ((preset.lightTint >> 8) & 255) / 255,
+          b: (preset.lightTint & 255) / 255,
+          duration: 0.6
+        });
+      }
+
+      gsap.fromTo(stackGroup.scale,
+        { x: 0.96, y: 0.96, z: 0.96 },
+        { x: 1, y: 1, z: 1, duration: 0.55, ease: 'back.out(2)' }
+      );
+
+      updateSpeciesHUD(speciesKey);
+    }
+
+    function updateSpeciesHUD(speciesKey) {
+      const preset = speciesPresets[speciesKey] || speciesPresets.oak;
+      const speciesHud = document.getElementById('hud-species-val');
+      const moistHud = document.getElementById('hud-moisture-val');
+      const densityTag = document.getElementById('species-density-tag');
+
+      if (speciesHud) speciesHud.textContent = preset.names[currentLang];
+      if (moistHud) moistHud.textContent = `${preset.moisture} (КАМЕРНА)`;
+      if (densityTag) densityTag.textContent = preset.density;
+    }
+
+    /* =========================================================================
+       4. LENIS SMOOTH SCROLL + GSAP SCROLLTRIGGER 5-SECTION CHOREOGRAPHY
+       ========================================================================= */
+    function initScrollChoreography() {
+      gsap.registerPlugin(ScrollTrigger);
+
+      // Initialize Lenis smooth scroll
+      if (typeof Lenis !== 'undefined') {
+        const lenis = new Lenis({
+          duration: 1.15,
+          easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+          smoothWheel: true
+        });
+
+        lenis.on('scroll', ScrollTrigger.update);
+        gsap.ticker.add((time) => {
+          lenis.raf(time * 1000);
+        });
+        gsap.ticker.lagSmoothing(0);
+      }
+
+      // Master Scroll Timeline across the entire page
+      const masterTl = gsap.timeline({
+        scrollTrigger: {
+          trigger: 'main',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 1.2
+        }
+      });
+
+      // PHASE 1 -> PHASE 2 (Exploded View: Stack separates vertically, Center Slab #2 glides out & rotates)
+      timberSlabs.forEach((slab, idx) => {
+        const spreadOffset = (idx - 2.5) * 0.48;
+        const isHeroSlab = idx === 2;
+
+        masterTl.to(slab.position, {
+          y: slab.userData.baseY + spreadOffset,
+          x: isHeroSlab ? slab.userData.baseX - 0.85 : slab.userData.baseX,
+          z: isHeroSlab ? 1.15 : 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 0);
+
+        masterTl.to(slab.rotation, {
+          z: isHeroSlab ? 0.18 : (idx % 2 === 0 ? 0.03 : -0.03),
+          y: isHeroSlab ? 0.24 : 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 0);
+      });
+
+      stickerGroups.forEach((st, idx) => {
+        const spreadOffset = (idx - 2) * 0.48;
+        masterTl.to(st.position, {
+          y: st.userData.baseY + spreadOffset,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 0);
+      });
+
+      masterTl.to(stackGroup.rotation, {
+        y: -0.95,
+        duration: 1,
+        ease: 'power1.inOut'
+      }, 0);
+
+      // PHASE 2 -> PHASE 3 (Catalog & Species Switcher: Camera sweeps along end-grain & live-edge)
+      timberSlabs.forEach((slab, idx) => {
+        const fanOffset = (idx - 2.5) * 0.22;
+        masterTl.to(slab.position, {
+          x: slab.userData.baseX + (idx - 2.5) * 0.25,
+          y: slab.userData.baseY + fanOffset,
+          z: 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 1);
+
+        masterTl.to(slab.rotation, {
+          x: 0,
+          y: (idx - 2.5) * 0.08,
+          z: 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 1);
+      });
+
+      masterTl.to(stackGroup.rotation, {
+        y: -0.25,
+        duration: 1,
+        ease: 'power2.inOut'
+      }, 1);
+
+      // PHASE 3 -> PHASE 4 (Warehouse Scale: Reassemble into tight architectural stepped pyramid)
+      timberSlabs.forEach((slab) => {
+        masterTl.to(slab.position, {
+          x: slab.userData.baseX,
+          y: slab.userData.baseY,
+          z: 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 2);
+
+        masterTl.to(slab.rotation, {
+          x: 0,
+          y: 0,
+          z: 0,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 2);
+      });
+
+      stickerGroups.forEach((st) => {
+        masterTl.to(st.position, {
+          y: st.userData.baseY,
+          duration: 1,
+          ease: 'power2.inOut'
+        }, 2);
+      });
+
+      masterTl.to(stackGroup.rotation, {
+        y: -0.78,
+        duration: 1,
+        ease: 'power2.inOut'
+      }, 2);
+
+      // PHASE 4 -> PHASE 5 (Contacts & Final Hero Stack Pose)
+      masterTl.to(stackGroup.rotation, {
+        y: -0.48,
+        duration: 1,
+        ease: 'power2.out'
+      }, 3);
+    }
+
+    /* =========================================================================
+       5. INITIALIZE APPLICATION ON LOAD
+       ========================================================================= */
+    window.addEventListener('DOMContentLoaded', () => {
+      initWebGL();
+      initScrollChoreography();
+      setLanguage('ua');
+    });
+  </script>
+</body>
+</html>
