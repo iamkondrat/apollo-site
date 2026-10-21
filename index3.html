@@ -183,7 +183,7 @@
     </style>
     <script>
         // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "1.3; 
+        const APP_VERSION = "1.4"; 
 
         // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
@@ -313,20 +313,26 @@
         
         const woodFace = textureLoader.load('wood_face.jpg');
         const woodBark = textureLoader.load('wood_bark.jpg');
+        // ЗАГРУЖАЕМ ЗАНОВО ДЛЯ СРЕЗА (Браузер возьмет из кэша. Это решит баг с пропаданием торца)
+        const woodEnd = textureLoader.load('wood_face.jpg'); 
         
         // 1. Настраиваем лицо доски
         woodFace.center.set(0.5, 0.5);
         woodFace.rotation = Math.PI / 2;
 
-        // 2. Настраиваем кору (Поворачиваем на 90 градусов)
+        // 2. Настраиваем торец (Срез)
+        woodEnd.center.set(0.5, 0.5);
+        woodEnd.rotation = 0; // Ставим волокна перпендикулярно
+        woodEnd.wrapS = woodEnd.wrapT = THREE.RepeatWrapping;
+        woodEnd.repeat.set(2, 2); // Делаем кольца мельче для реализма
+
+        // 3. Настраиваем кору
         woodBark.center.set(0.5, 0.5);
-        woodBark.rotation = Math.PI / 2; // Поворот коры
+        woodBark.rotation = Math.PI / 2;
         woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
-        // Так как мы повернули текстуру, оси поменялись местами.
-        // Теперь повторяем её вдоль доски по второй координате:
         woodBark.repeat.set(1, 5); 
 
-        // 3. Создаем материалы
+        // 4. Создаем материалы
         const faceMat = new THREE.MeshStandardMaterial({ 
             map: woodFace, 
             roughness: 0.8 
@@ -336,75 +342,45 @@
             map: woodBark, 
             roughness: 0.9, 
             bumpMap: woodBark, 
-            bumpScale: 0.15, // Усилили светотень микрорельефа (было 0.05)
-            displacementMap: woodBark, 
-            displacementScale: 0.08 // Сделали физическое выпирание в 4 раза сильнее (было 0.02)
+            bumpScale: 0.2 // Усилили тени микрорельефа
+            // Убрали displacementMap, чтобы модель больше не рвалась по швам!
         });
-
-        // 4. СПЕЦИАЛЬНЫЙ МАТЕРИАЛ ДЛЯ ТОРЦА (СРЕЗА)
-        // Клонируем текстуру, чтобы поворот не затронул основную пласть доски
-        const woodEnd = woodFace.clone();
-        woodEnd.needsUpdate = true;
-        woodEnd.center.set(0.5, 0.5);
-        
-        // Так как woodFace у нас уже повернут на Math.PI / 2 (90 градусов),
-        // для торца мы возвращаем 0 (или ставим Math.PI), чтобы волокна встали перпендикулярно
-        woodEnd.rotation = Math.PI / 2; 
-        
-        // Можно немного сжать текстуру на торце, чтобы сымитировать мелкие годовые кольца
-        woodEnd.wrapS = woodEnd.wrapT = THREE.RepeatWrapping;
-        woodEnd.repeat.set(2, 2); 
 
         const endMat = new THREE.MeshStandardMaterial({ 
             map: woodEnd, 
-            color: 0xaaaaaa, // Затемняем срез
+            color: 0xaaaaaa, // Затемняем срез дерева
             roughness: 0.9 
         });
 
-        // 5. Создаем форму доски
-        // УВЕЛИЧИЛИ ПЛОТНОСТЬ СЕТКИ: 
-        // 10 сегментов по толщине и 150 по длине, чтобы коре было из чего "лепиться".
-        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 10, 150);
+        // 5. Геометрия доски
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 150);
         
+        // Создаем физический рельеф и обзол математически (без разрывов сетки)
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
             let x = pos.getX(i);
+            let y = pos.getY(i);
             let z = pos.getZ(i);
+            
             if(Math.abs(x) > 0.55) {
-                let noise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
-                pos.setX(i, x + (x > 0 ? noise : -noise));
+                // Крупные плавные волны живого края
+                let macroNoise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
+                // Мелкий шершавый рельеф коры (физические бугры)
+                let microNoise = (Math.sin(y * 100) * Math.cos(z * 150)) * 0.005; 
+                
+                pos.setX(i, x + (x > 0 ? macroNoise + microNoise : -macroNoise - microNoise));
             }
         }
         geometry.computeVertexNormals();
 
-        // Правильно распределяем материалы по граням
+        // 6. Сборка (Индексы: 0-право, 1-лево, 2-верх, 3-низ, 4-срез, 5-срез)
         const materials = [barkMat, barkMat, faceMat, faceMat, endMat, endMat];
-        
         const board = new THREE.Mesh(geometry, materials);
         
         board.rotation.x = 0.2;
         board.rotation.y = -0.5;
         
-
-        // Привязываем главную доску к сцене
         boardGroup.add(board);
-
-        // --- ВНУТРЕННИЙ СЛОЙ (ЗАКРАШИВАЕМ ПРОБЕЛЫ ПОД КОРОЙ) ---
-        // Создаем матовый материал цвета темного дерева / внутренней коры
-        const coreMat = new THREE.MeshStandardMaterial({ 
-            color: 0x2a1b12, 
-            roughness: 1 
-        });
-        
-        // Создаем внутреннюю модель из той же самой изогнутой геометрии
-        const coreMesh = new THREE.Mesh(geometry, coreMat);
-        
-        // Уменьшаем её буквально на миллиметры, чтобы она не "мерцала" на ровных поверхностях,
-        // но гарантированно перекрывала щели по выдавленным бокам
-        coreMesh.scale.set(0.97, 0.85, 0.995); 
-        
-        // Добавляем сердцевину ВНУТРЬ главной доски (чтобы она наследовала все повороты и анимации)
-        board.add(coreMesh);
         
         // 6. GSAP Анимация при скролле
         // Настраиваем таймлайн, привязанный к скроллу всей страницы
