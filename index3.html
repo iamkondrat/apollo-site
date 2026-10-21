@@ -183,7 +183,7 @@
     </style>
     <script>
         // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "1.6"; 
+        const APP_VERSION = "1.7"; 
 
         // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
@@ -328,7 +328,8 @@
         woodBark.center.set(0.5, 0.5);
         woodBark.rotation = Math.PI / 2;
         woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
-        woodBark.repeat.set(1, 5); 
+        // Увеличили повторение вдоль доски с 5 до 20, чтобы кора перестала быть мыльной и растянутой
+        woodBark.repeat.set(1, 20); 
 
         // 4. Создаем материалы
         const faceMat = new THREE.MeshStandardMaterial({ 
@@ -340,33 +341,46 @@
             map: woodBark, 
             roughness: 0.9, 
             bumpMap: woodBark, 
-            bumpScale: 0.2 // Усилили тени микрорельефа
-            // Убрали displacementMap, чтобы модель больше не рвалась по швам!
+            bumpScale: 0.3 // Сделали тени на коре еще глубже
         });
 
         const endMat = new THREE.MeshStandardMaterial({ 
             map: woodEnd, 
-            color: 0xaaaaaa, // Затемняем срез дерева
+            color: 0xaaaaaa,
             roughness: 0.9 
         });
 
-        // 5. Геометрия доски
+        // 5. Геометрия доски с ФИЗИЧЕСКОЙ ТОЛЩИНОЙ КОРЫ
         const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 150);
         
-        // Создаем физический рельеф и обзол математически (без разрывов сетки)
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
             let x = pos.getX(i);
             let y = pos.getY(i);
             let z = pos.getZ(i);
             
-            if(Math.abs(x) > 0.55) {
-                // Крупные плавные волны живого края
-                let macroNoise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
-                // Мелкий шершавый рельеф коры (физические бугры)
-                let microNoise = (Math.sin(y * 100) * Math.cos(z * 150)) * 0.005; 
+            // Начинаем искривление только ближе к краям
+            if(Math.abs(x) > 0.5) {
+                // edgeFactor от 0 (начало края) до 1 (самый торец коры)
+                let edgeFactor = (Math.abs(x) - 0.5) / 0.1; 
                 
-                pos.setX(i, x + (x > 0 ? macroNoise + microNoise : -macroNoise - microNoise));
+                // Крупные плавные волны
+                let macroNoise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
+                
+                // Имитация толщины слоя коры! 
+                // Math.pow делает выступ резким в самом конце, создавая ступеньку
+                let barkThickness = Math.pow(edgeFactor, 4) * 0.035; 
+                
+                // Мелкий шершавый рельеф (только на самых боках)
+                let microNoise = 0;
+                if(edgeFactor > 0.95) {
+                    microNoise = (Math.sin(y * 100) * Math.cos(z * 150)) * 0.008;
+                    // Вздуваем кору по высоте, чтобы она физически выпирала над плоскостью доски
+                    pos.setY(i, y + Math.sign(y) * 0.004);
+                }
+                
+                // Применяем все деформации по оси X (выдавливаем наружу)
+                pos.setX(i, x + Math.sign(x) * (macroNoise + barkThickness + microNoise));
             }
         }
         geometry.computeVertexNormals();
