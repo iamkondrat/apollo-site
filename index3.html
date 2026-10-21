@@ -183,7 +183,7 @@
     </style>
     <script>
         // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "1.4"; 
+        const APP_VERSION = "1.5"; 
 
         // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
@@ -322,7 +322,7 @@
 
         // 2. Настраиваем торец (Срез)
         woodEnd.center.set(0.5, 0.5);
-        woodEnd.rotation = 0; // Ставим волокна перпендикулярно
+        woodEnd.rotation = 90; // Ставим волокна перпендикулярно
         woodEnd.wrapS = woodEnd.wrapT = THREE.RepeatWrapping;
         woodEnd.repeat.set(2, 2); // Делаем кольца мельче для реализма
 
