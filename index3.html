@@ -183,7 +183,7 @@
     </style>
     <script>
         // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "1.0"; 
+        const APP_VERSION = "1.1"; 
 
         // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
@@ -314,37 +314,49 @@
         const woodFace = textureLoader.load('wood_face.jpg');
         const woodBark = textureLoader.load('wood_bark.jpg');
         
-        // Настраиваем лицо доски (поворачиваем волокна вдоль)
+        // 1. Настраиваем лицо доски
         woodFace.center.set(0.5, 0.5);
         woodFace.rotation = Math.PI / 2;
 
-        // Настраиваем кору (делаем её крупной, повторяя всего 5 раз вместо 20)
+        // 2. Настраиваем кору (Поворачиваем на 90 градусов)
+        woodBark.center.set(0.5, 0.5);
+        woodBark.rotation = Math.PI / 2; // Поворот коры
         woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
-        woodBark.repeat.set(5, 1); 
+        // Так как мы повернули текстуру, оси поменялись местами.
+        // Теперь повторяем её вдоль доски по второй координате:
+        woodBark.repeat.set(1, 5); 
 
-        // Создаем материалы (добавили displacementMap для физического объема коры)
+        // 3. Создаем материалы
         const faceMat = new THREE.MeshStandardMaterial({ 
             map: woodFace, 
             roughness: 0.8 
         });
+        
         const barkMat = new THREE.MeshStandardMaterial({ 
             map: woodBark, 
             roughness: 0.9, 
             bumpMap: woodBark, 
-            bumpScale: 0.05,
-            displacementMap: woodBark, // Выдавливает пиксели наружу, создавая толщину
-            displacementScale: 0.02    // Регулирует, насколько сильно кора выпирает
+            bumpScale: 0.15, // Усилили светотень микрорельефа (было 0.05)
+            displacementMap: woodBark, 
+            displacementScale: 0.08 // Сделали физическое выпирание в 4 раза сильнее (было 0.02)
         });
 
-        // Создаем форму доски (увеличили количество полигонов до 64 и 4, чтобы коре было куда выдавливаться)
-        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 64);
+        // 4. СПЕЦИАЛЬНЫЙ МАТЕРИАЛ ДЛЯ ТОРЦА (СРЕЗА)
+        const endMat = new THREE.MeshStandardMaterial({ 
+            map: woodFace, 
+            color: 0xaaaaaa, // Сделал спил еще чуть темнее и естественнее
+            roughness: 0.9 
+        });
+
+        // 5. Создаем форму доски
+        // УВЕЛИЧИЛИ ПЛОТНОСТЬ СЕТКИ: 
+        // 10 сегментов по толщине и 150 по длине, чтобы коре было из чего "лепиться".
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 10, 150);
         
-        // Математически искривляем края, создавая реалистичный обзол
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
             let x = pos.getX(i);
             let z = pos.getZ(i);
-            // Применяем шум только к боковым граням
             if(Math.abs(x) > 0.55) {
                 let noise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
                 pos.setX(i, x + (x > 0 ? noise : -noise));
@@ -352,11 +364,11 @@
         }
         geometry.computeVertexNormals();
 
-        // Склеиваем доску из материалов (индексы: 0-право, 1-лево, 2-верх, 3-низ, 4-перед, 5-зад)
-        const materials = [barkMat, barkMat, faceMat, faceMat, barkMat, barkMat];
+        // Правильно распределяем материалы по граням
+        const materials = [barkMat, barkMat, faceMat, faceMat, endMat, endMat];
+        
         const board = new THREE.Mesh(geometry, materials);
         
-        // Начальный наклон
         board.rotation.x = 0.2;
         board.rotation.y = -0.5;
         
