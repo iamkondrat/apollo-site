@@ -183,7 +183,7 @@
     </style>
     <script>
         // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "1.1"; 
+        const APP_VERSION = "1.2"; 
 
         // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
@@ -342,9 +342,22 @@
         });
 
         // 4. СПЕЦИАЛЬНЫЙ МАТЕРИАЛ ДЛЯ ТОРЦА (СРЕЗА)
+        // Клонируем текстуру, чтобы поворот не затронул основную пласть доски
+        const woodEnd = woodFace.clone();
+        woodEnd.needsUpdate = true;
+        woodEnd.center.set(0.5, 0.5);
+        
+        // Так как woodFace у нас уже повернут на Math.PI / 2 (90 градусов),
+        // для торца мы возвращаем 0 (или ставим Math.PI), чтобы волокна встали перпендикулярно
+        woodEnd.rotation = 0; 
+        
+        // Можно немного сжать текстуру на торце, чтобы сымитировать мелкие годовые кольца
+        woodEnd.wrapS = woodEnd.wrapT = THREE.RepeatWrapping;
+        woodEnd.repeat.set(2, 2); 
+
         const endMat = new THREE.MeshStandardMaterial({ 
-            map: woodFace, 
-            color: 0xaaaaaa, // Сделал спил еще чуть темнее и естественнее
+            map: woodEnd, 
+            color: 0xaaaaaa, // Затемняем срез
             roughness: 0.9 
         });
 
