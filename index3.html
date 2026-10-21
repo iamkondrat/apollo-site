@@ -282,17 +282,16 @@
         
         const woodFace = textureLoader.load('wood_face.jpg');
         const woodBark = textureLoader.load('wood_bark.jpg');
+        
+        // Настраиваем лицо доски (поворачиваем волокна вдоль)
+        woodFace.center.set(0.5, 0.5);
+        woodFace.rotation = Math.PI / 2;
 
-        // 1. Настраиваем лицо доски (Растягиваем 1 к 1, но поворачиваем вдоль)
-        woodFace.center.set(0.5, 0.5); // Ставим точку вращения в центр картинки
-        woodFace.rotation = Math.PI / 2; // Поворачиваем волокна на 90 градусов
-        // (Если вдруг волокна станут поперек - просто удали эти две строки с center и rotation)
-
-        // 2. Настраиваем кору (Обязательно повторяем, чтобы пиксели не сплющивались в серую полосу)
+        // Настраиваем кору (делаем её крупной, повторяя всего 5 раз вместо 20)
         woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
-        woodBark.repeat.set(20, 1); // Повторяем узор 20 раз вдоль длинного края
+        woodBark.repeat.set(5, 1); 
 
-        // Создаем материалы
+        // Создаем материалы (добавили displacementMap для физического объема коры)
         const faceMat = new THREE.MeshStandardMaterial({ 
             map: woodFace, 
             roughness: 0.8 
@@ -301,35 +300,37 @@
             map: woodBark, 
             roughness: 0.9, 
             bumpMap: woodBark, 
-            bumpScale: 0.05 
+            bumpScale: 0.05,
+            displacementMap: woodBark, // Выдавливает пиксели наружу, создавая толщину
+            displacementScale: 0.02    // Регулирует, насколько сильно кора выпирает
         });
 
-        // Создаем базовую прямоугольную форму доски
-        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 32, 1, 32);
+        // Создаем форму доски (увеличили количество полигонов до 64 и 4, чтобы коре было куда выдавливаться)
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 64);
         
         // Математически искривляем края, создавая реалистичный обзол
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
             let x = pos.getX(i);
             let z = pos.getZ(i);
-            // Применяем шум (волны) только к самым крайним боковым точкам
+            // Применяем шум только к боковым граням
             if(Math.abs(x) > 0.55) {
                 let noise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
                 pos.setX(i, x + (x > 0 ? noise : -noise));
             }
         }
-        geometry.computeVertexNormals(); // Пересчитываем свет после искривления
+        geometry.computeVertexNormals();
 
-        // Склеиваем доску (индексы: 0-право, 1-лево, 2-верх, 3-низ, 4-перед, 5-зад)
+        // Склеиваем доску из материалов (индексы: 0-право, 1-лево, 2-верх, 3-низ, 4-перед, 5-зад)
         const materials = [barkMat, barkMat, faceMat, faceMat, barkMat, barkMat];
         const board = new THREE.Mesh(geometry, materials);
         
-        // Начальный наклон, чтобы доска красиво лежала
+        // Начальный наклон
         board.rotation.x = 0.2;
         board.rotation.y = -0.5;
         
         boardGroup.add(board);
-
+        
         // 6. GSAP Анимация при скролле
         // Настраиваем таймлайн, привязанный к скроллу всей страницы
         const tl = gsap.timeline({
