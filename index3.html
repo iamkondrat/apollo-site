@@ -280,13 +280,17 @@
         // 5. Создание 3D-доски из локальных текстур
         const textureLoader = new THREE.TextureLoader();
         
-        // Загружаем твои сохраненные картинки (они должны лежать в той же папке)
         const woodFace = textureLoader.load('wood_face.jpg');
         const woodBark = textureLoader.load('wood_bark.jpg');
-        
-        // Настраиваем повторение текстуры
-        woodFace.wrapS = woodFace.wrapT = THREE.RepeatWrapping;
+
+        // 1. Настраиваем лицо доски (Растягиваем 1 к 1, но поворачиваем вдоль)
+        woodFace.center.set(0.5, 0.5); // Ставим точку вращения в центр картинки
+        woodFace.rotation = Math.PI / 2; // Поворачиваем волокна на 90 градусов
+        // (Если вдруг волокна станут поперек - просто удали эти две строки с center и rotation)
+
+        // 2. Настраиваем кору (Обязательно повторяем, чтобы пиксели не сплющивались в серую полосу)
         woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
+        woodBark.repeat.set(20, 1); // Повторяем узор 20 раз вдоль длинного края
 
         // Создаем материалы
         const faceMat = new THREE.MeshStandardMaterial({ 
