@@ -181,6 +181,37 @@
         }
 
     </style>
+    <script>
+        // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
+        const APP_VERSION = "1.0"; 
+
+        // Асинхронная проверка обновлений в фоне
+        window.addEventListener('load', () => {
+            // Добавляем timestamp к URL запроса, чтобы 100% пробить кэш провайдера
+            const checkUrl = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
+            
+            fetch(checkUrl, { cache: "no-store", method: "GET" })
+                .then(response => response.text())
+                .then(html => {
+                    // Ищем строчку с версией в свежем коде на сервере
+                    const match = html.match(/const APP_VERSION = "([^"]+)"/);
+                    if (match && match[1] && match[1] !== APP_VERSION) {
+                        console.log(`Доступна новая версия: ${match[1]}. Обновляем кэш...`);
+                        
+                        // Сбрасываем кэш браузера (если поддерживается)
+                        if ('caches' in window) {
+                            caches.keys().then(names => {
+                                for (let name of names) caches.delete(name);
+                            });
+                        }
+                        
+                        // Принудительно перезагружаем страницу с сервера
+                        window.location.reload(true);
+                    }
+                })
+                .catch(err => console.log("Оффлайн режим. Проверка обновлений пропущена."));
+        });
+    </script>
 </head>
 <body>
 
