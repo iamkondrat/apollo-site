@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>АПОЛЛО — Пиломатеріали Київ</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Unbounded:wght@700;800&display=swap" rel="stylesheet">
+
+    <!-- Библиотеки -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.19/bundled/lenis.min.js"></script>
+
+    <style>
+        :root {
+            --bg-dark: #13191C;
+            --text-light: #F3EDE2;
+            --accent-bronze: #A86A38;
+            --timber-gold: #E0A14A;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* 3D Canvas Background */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* UI Overlay */
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            pointer-events: none; /* Пропускаем клики сквозь контейнеры */
+        }
+
+        /* Навигация */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 2rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .logo svg {
+            height: 40px;
+            width: auto;
+        }
+
+        .lang-switch {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+        .lang-switch span { opacity: 0.4; cursor: pointer; transition: 0.3s; }
+        .lang-switch span.active, .lang-switch span:hover { opacity: 1; color: var(--accent-bronze); }
+
+        /* Секции (Flexbox центрирование) */
+        section {
+            min-height: 100vh;
+            width: 100vw;
+            padding: 0 5%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Адаптивная (Fluid) Типографика - математически не вылазит за экран */
+        h1, h2 {
+            font-family: 'Unbounded', sans-serif;
+            text-transform: uppercase;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-title {
+            /* clamp(min, preferred, max) */
+            font-size: clamp(2.5rem, 8vw, 7rem); 
+            max-width: 900px;
+            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(1rem, 1.5vw, 1.2rem);
+            opacity: 0.8;
+            max-width: 500px;
+            margin-bottom: 3rem;
+            line-height: 1.5;
+        }
+
+        .section-title {
+            font-size: clamp(2rem, 5vw, 4rem);
+            max-width: 700px;
+        }
+
+        .section-text {
+            font-size: clamp(1rem, 1.2vw, 1.2rem);
+            opacity: 0.8;
+            max-width: 400px;
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+
+        /* Кнопки */
+        .btn {
+            pointer-events: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 2rem;
+            background: var(--accent-bronze);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        .btn:hover {
+            background: var(--timber-gold);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--text-light);
+            color: var(--text-light);
+        }
+        .btn-outline:hover {
+            background: var(--text-light);
+            color: var(--bg-dark);
+        }
+
+        /* Расположение контента в секциях */
+        .align-right { align-items: flex-end; text-align: right; }
+        .align-center { align-items: center; text-align: center; }
+        
+        /* Мобильная адаптация */
+        @media (max-width: 768px) {
+            header { padding: 1.5rem 5%; }
+            .logo svg { height: 30px; }
+            .align-right { align-items: flex-start; text-align: left; }
+            .btn { width: 100%; justify-content: center; }
+            section { padding-top: 10vh; padding-bottom: 10vh; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- 3D Background -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- UI Overlay -->
+    <div class="ui-layer">
+        
+        <header>
+            <div class="logo">
+                <!-- Векторный минималистичный логотип АПОЛЛО -->
+                <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 40L35 10L50 40" stroke="#A86A38" stroke-width="4" stroke-linecap="square"/>
+                    <path d="M28 25H42" stroke="#A86A38" stroke-width="4"/>
+                    <text x="70" y="35" fill="#F3EDE2" font-family="Unbounded" font-size="24" font-weight="800" letter-spacing="4">П О Λ Λ О</text>
+                </svg>
+            </div>
+            <div class="lang-switch">
+                <span class="active">UA</span>
+                <span>RU</span>
+                <span>EN</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Секция 1: Главная -->
+            <section class="align-left">
+                <h1 class="hero-title">Преміальний<br>лісосклад</h1>
+                <p class="hero-subtitle">Найбільший вибір сухої та необрізної дошки в Києві. Відбірний столярний ліс з ідеальною геометрією.</p>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <a href="#" class="btn">Завантажити прайс</a>
+                    <a href="tel:0685386923" class="btn btn-outline">068 538 69 23</a>
+                </div>
+            </section>
+
+            <!-- Секция 2: Живой край -->
+            <section class="align-right">
+                <h2 class="section-title">Живий<br>край</h2>
+                <p class="section-text">Кожна необрізна дошка зберігає природну текстуру та кору. Ідеально для столів-рік, лофт-меблів та дизайнерських рішень. Камерна сушка 8-10%.</p>
+            </section>
+
+            <!-- Секция 3: Контакты -->
+            <section class="align-center">
+                <h2 class="section-title">Чекаємо на завантаження</h2>
+                <p class="section-text" style="max-width: 600px;">
+                    м. Київ, Дніпровська набережна, 17е<br>
+                    Зручний заїзд для фур, швидке відвантаження.<br>
+                    <strong>096 000 00 76</strong>
+                </p>
+                <a href="#" class="btn">Відкрити в Google Maps</a>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // 1. Инициализация плавного скролла (Lenis)
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+        function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+        requestAnimationFrame(raf);
+
+        gsap.registerPlugin(ScrollTrigger);
+
+        // 2. Инициализация Three.js
+        const canvas = document.querySelector('#webgl-canvas');
+        const scene = new THREE.Scene();
+        // Добавляем легкий туман для глубины
+        scene.fog = new THREE.FogExp2(0x13191C, 0.05);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 0, 5);
+
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.2;
+
+        // 3. Премиальный студийный свет
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const spotLight = new THREE.SpotLight(0xE0A14A, 2);
+        spotLight.position.set(5, 5, 5);
+        spotLight.angle = Math.PI / 4;
+        spotLight.penumbra = 0.5;
+        scene.add(spotLight);
+
+        const fillLight = new THREE.DirectionalLight(0x4A6B8C, 1); // Холодный контровой свет
+        fillLight.position.set(-5, 0, -5);
+        scene.add(fillLight);
+
+        // 4. Группа для 3D Модели
+        const boardGroup = new THREE.Group();
+        scene.add(boardGroup);
+
+        // 5. Создание 3D-доски из локальных текстур
+        const textureLoader = new THREE.TextureLoader();
+        
+        // Загружаем твои сохраненные картинки (они должны лежать в той же папке)
+        const woodFace = textureLoader.load('wood_face.jpg');
+        const woodBark = textureLoader.load('wood_bark.jpg');
+        
+        // Настраиваем повторение текстуры
+        woodFace.wrapS = woodFace.wrapT = THREE.RepeatWrapping;
+        woodBark.wrapS = woodBark.wrapT = THREE.RepeatWrapping;
+
+        // Создаем материалы
+        const faceMat = new THREE.MeshStandardMaterial({ 
+            map: woodFace, 
+            roughness: 0.8 
+        });
+        const barkMat = new THREE.MeshStandardMaterial({ 
+            map: woodBark, 
+            roughness: 0.9, 
+            bumpMap: woodBark, 
+            bumpScale: 0.05 
+        });
+
+        // Создаем базовую прямоугольную форму доски
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 32, 1, 32);
+        
+        // Математически искривляем края, создавая реалистичный обзол
+        const pos = geometry.attributes.position;
+        for(let i = 0; i < pos.count; i++) {
+            let x = pos.getX(i);
+            let z = pos.getZ(i);
+            // Применяем шум (волны) только к самым крайним боковым точкам
+            if(Math.abs(x) > 0.55) {
+                let noise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
+                pos.setX(i, x + (x > 0 ? noise : -noise));
+            }
+        }
+        geometry.computeVertexNormals(); // Пересчитываем свет после искривления
+
+        // Склеиваем доску (индексы: 0-право, 1-лево, 2-верх, 3-низ, 4-перед, 5-зад)
+        const materials = [barkMat, barkMat, faceMat, faceMat, barkMat, barkMat];
+        const board = new THREE.Mesh(geometry, materials);
+        
+        // Начальный наклон, чтобы доска красиво лежала
+        board.rotation.x = 0.2;
+        board.rotation.y = -0.5;
+        
+        boardGroup.add(board);
+
+        // 6. GSAP Анимация при скролле
+        // Настраиваем таймлайн, привязанный к скроллу всей страницы
+        const tl = gsap.timeline({
+            scrollTrigger: {
+                trigger: "body",
+                start: "top top",
+                end: "bottom bottom",
+                scrub: 1 // Плавное следование за скроллом
+            }
+        });
+
+        // Секция 1 -> Секция 2 (Доска подлетает, поворачивается живым краем)
+        tl.to(boardGroup.position, { x: -1.5, z: 2, ease: "power1.inOut" }, 0)
+          .to(boardGroup.rotation, { x: 1.2, y: 0.5, z: -0.2, ease: "power1.inOut" }, 0);
+
+        // Секция 2 -> Секция 3 (Доска улетает наверх/вдаль)
+        tl.to(boardGroup.position, { x: 0, y: 1, z: -2, ease: "power1.inOut" }, 0.5)
+          .to(boardGroup.rotation, { x: 1.5, y: -0.5, z: 0.5, ease: "power1.inOut" }, 0.5);
+
+        // 7. Легкая анимация парения (Idle animation)
+        gsap.to(boardGroup.position, {
+            y: "+=0.1",
+            duration: 2,
+            yoyo: true,
+            repeat: -1,
+            ease: "sine.inOut"
+        });
+
+        // 8. Рендер луп и адаптивность
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>
