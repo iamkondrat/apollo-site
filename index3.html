@@ -180,7 +180,7 @@
     </style>
     <script>
         // Версия 3.0: Изменяй эту цифру для сброса кэша!
-        const APP_VERSION = "3.0"; 
+        const APP_VERSION = "3.1"; 
 
         window.addEventListener('load', () => {
             const checkUrl = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
@@ -319,6 +319,7 @@
             tex.repeat.set(1, 15); 
         });
 
+        // 4. Создание материалов
         const faceMat = new THREE.MeshStandardMaterial({ 
             map: woodFace, 
             roughness: 0.7 
@@ -327,19 +328,21 @@
         const barkMat = new THREE.MeshStandardMaterial({ 
             map: barkColor, 
             normalMap: barkNormal, 
-            normalScale: new THREE.Vector2(3, 3), 
+            normalScale: new THREE.Vector2(2, 2), 
             roughnessMap: barkRoughness,
-            roughness: 1.0 
+            roughness: 1.0,
+            color: 0x777777 // Искусственно затемняем кору, чтобы она не сливалась со светлым деревом
         });
 
         const endMat = new THREE.MeshStandardMaterial({ 
             map: woodEnd, 
-            color: 0xaaaaaa,
+            color: 0xaaaaaa, 
             roughness: 0.9 
         });
 
-        // Увеличено количество сегментов по ширине (с 32 до 64) для плавных волн
-        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 150);
+        // 5. Идеально гладкая геометрия со скосом
+        // Уменьшили количество сегментов по высоте до 2, чтобы сетка была чище
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 32, 2, 100);
         
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
@@ -347,11 +350,24 @@
             let y = pos.getY(i);
             let z = pos.getZ(i);
             
-            // Расширена зона захвата краев (было > 0.55, стало > 0.45)
-            if(Math.abs(x) > 0.45) {
-                let macroNoise = Math.sin(z * 4) * 0.03 + Math.cos(z * 9) * 0.02;
-                pos.setX(i, x + Math.sign(x) * macroNoise);
+            // Получаем коэффициент от -1 (левый край) до 1 (правый край)
+            let normalizedX = x / 0.6; 
+            
+            // Формируем красивую макро-волну
+            let macroNoise = Math.sin(z * 4) * 0.05 + Math.cos(z * 8) * 0.02;
+            
+            // 1. Растягиваем ВСЕ точки пропорционально. 
+            // Это навсегда убирает артефакты, тени и "шумы" на верхней пласти.
+            let newX = x + normalizedX * macroNoise;
+
+            // 2. Имитируем круглое бревно (естественный скос).
+            // Делаем нижнюю грань (y < 0) на 4 сантиметра шире верхней.
+            // Теперь кора будет смотреть диагонально вверх прямо в камеру.
+            if (y < 0) {
+                newX += Math.sign(normalizedX) * 0.04;
             }
+            
+            pos.setX(i, newX);
         }
         geometry.computeVertexNormals();
 
