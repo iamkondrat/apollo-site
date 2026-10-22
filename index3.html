@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>АПОЛЛО — Пиломатеріали Київ</title>
 
-    
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -55,7 +54,7 @@
         .ui-layer {
             position: relative;
             z-index: 10;
-            pointer-events: none; /* Пропускаем кликисквозь контейнеры */
+            pointer-events: none;
         }
 
         /* Навигация */
@@ -87,7 +86,7 @@
         .lang-switch span { opacity: 0.4; cursor: pointer; transition: 0.3s; }
         .lang-switch span.active, .lang-switch span:hover { opacity: 1; color: var(--accent-bronze); }
 
-        /* Секции (Flexbox центрирование) */
+        /* Секции */
         section {
             min-height: 100vh;
             width: 100vw;
@@ -98,7 +97,7 @@
             position: relative;
         }
 
-        /* Адаптивная (Fluid) Типографика - математически не вылазит за экран */
+        /* Адаптивная Типографика */
         h1, h2 {
             font-family: 'Unbounded', sans-serif;
             text-transform: uppercase;
@@ -107,7 +106,6 @@
         }
 
         .hero-title {
-            /* clamp(min, preferred, max) */
             font-size: clamp(2.5rem, 8vw, 7rem); 
             max-width: 900px;
             text-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -168,11 +166,9 @@
             color: var(--bg-dark);
         }
 
-        /* Расположение контента в секциях */
         .align-right { align-items: flex-end; text-align: right; }
         .align-center { align-items: center; text-align: center; }
         
-        /* Мобильная адаптация */
         @media (max-width: 768px) {
             header { padding: 1.5rem 5%; }
             .logo svg { height: 30px; }
@@ -183,48 +179,37 @@
 
     </style>
     <script>
-        // ТЕКУЩАЯ ВЕРСИЯ САЙТА (Меняй эту цифру при каждом пуше нового кода на GitHub)
-        const APP_VERSION = "2.2"; 
+        // Версия 3.0: Изменяй эту цифру для сброса кэша!
+        const APP_VERSION = "3.0"; 
 
-        // Асинхронная проверка обновлений в фоне
         window.addEventListener('load', () => {
-            // Добавляем timestamp к URL запроса, чтобы 100% пробить кэш провайдера
             const checkUrl = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
             
             fetch(checkUrl, { cache: "no-store", method: "GET" })
                 .then(response => response.text())
                 .then(html => {
-                    // Ищем строчку с версией в свежем коде на сервере
                     const match = html.match(/const APP_VERSION = "([^"]+)"/);
                     if (match && match[1] && match[1] !== APP_VERSION) {
-                        console.log(`Доступна новая версия: ${match[1]}. Обновляем кэш...`);
-                        
-                        // Сбрасываем кэш браузера (если поддерживается)
+                        console.log(`Обновление до версии: ${match[1]}`);
                         if ('caches' in window) {
                             caches.keys().then(names => {
                                 for (let name of names) caches.delete(name);
                             });
                         }
-                        
-                        // Принудительно перезагружаем страницу с сервера
                         window.location.reload(true);
                     }
                 })
-                .catch(err => console.log("Оффлайн режим. Проверка обновлений пропущена."));
+                .catch(err => console.log("Оффлайн режим."));
         });
     </script>
 </head>
 <body>
 
-    <!-- 3D Background -->
     <canvas id="webgl-canvas"></canvas>
 
-    <!-- UI Overlay -->
     <div class="ui-layer">
-        
         <header>
             <div class="logo">
-                <!-- Векторный минималистичный логотип АПОЛЛО -->
                 <svg viewBox="0 0 200 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M20 40L35 10L50 40" stroke="#A86A38" stroke-width="4" stroke-linecap="square"/>
                     <path d="M28 25H42" stroke="#A86A38" stroke-width="4"/>
@@ -239,7 +224,6 @@
         </header>
 
         <main>
-            <!-- Секция 1: Главная -->
             <section class="align-left">
                 <h1 class="hero-title">Преміальний<br>лісосклад</h1>
                 <p class="hero-subtitle">Найбільший вибір сухої та необрізної дошки в Києві. Відбірний столярний ліс з ідеальною геометрією.</p>
@@ -249,13 +233,11 @@
                 </div>
             </section>
 
-            <!-- Секция 2: Живой край -->
             <section class="align-right">
                 <h2 class="section-title">Живий<br>край</h2>
                 <p class="section-text">Кожна необрізна дошка зберігає природну текстуру та кору. Ідеально для столів-рік, лофт-меблів та дизайнерських рішень. Камерна сушка 8-10%.</p>
             </section>
 
-            <!-- Секция 3: Контакты -->
             <section class="align-center">
                 <h2 class="section-title">Чекаємо на завантаження</h2>
                 <p class="section-text" style="max-width: 600px;">
@@ -269,17 +251,14 @@
     </div>
 
     <script>
-        // 1. Инициализация плавного скролла (Lenis)
         const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
         function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
         requestAnimationFrame(raf);
 
         gsap.registerPlugin(ScrollTrigger);
 
-        // 2. Инициализация Three.js
         const canvas = document.querySelector('#webgl-canvas');
         const scene = new THREE.Scene();
-        // Добавляем легкий туман для глубины
         scene.fog = new THREE.FogExp2(0x13191C, 0.05);
 
         const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
@@ -288,11 +267,13 @@
         const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
+        // ВАЖНО: Включаем правильное цветовое пространство для PBR текстур
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.2;
+        renderer.outputEncoding = THREE.sRGBEncoding;
 
-        // 3. Премиальный студийный свет
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
         const spotLight = new THREE.SpotLight(0xE0A14A, 2);
@@ -301,44 +282,43 @@
         spotLight.penumbra = 0.5;
         scene.add(spotLight);
 
-        const fillLight = new THREE.DirectionalLight(0x4A6B8C, 1); // Холодный контровой свет
+        const fillLight = new THREE.DirectionalLight(0x4A6B8C, 1.2); 
         fillLight.position.set(-5, 0, -5);
         scene.add(fillLight);
 
-        // 4. Группа для 3D Модели
         const boardGroup = new THREE.Group();
         scene.add(boardGroup);
 
-        // 5. Создание 3D-доски с PBR-текстурами
         const textureLoader = new THREE.TextureLoader();
         
-        // Лицо и торец (твои текстуры)
-        const woodFace = textureLoader.load('wood_face.jpg');
-        const woodEnd = textureLoader.load('wood_face.jpg');
+        // ВАЖНО: Добавляем параметр ?v= к картинкам, чтобы обойти жесткий кэш GitHub
+        const v = "?v=" + APP_VERSION;
+        const woodFace = textureLoader.load('wood_face.jpg' + v);
+        const woodEnd = textureLoader.load('wood_face.jpg' + v);
         
-        // НОВЫЕ PBR-карты для коры
-        const barkColor = textureLoader.load('bark_color.jpg');
-        const barkNormal = textureLoader.load('bark_normal.jpg');
-        const barkRoughness = textureLoader.load('bark_roughness.jpg');
+        const barkColor = textureLoader.load('bark_color.jpg' + v);
+        const barkNormal = textureLoader.load('bark_normal.jpg' + v);
+        const barkRoughness = textureLoader.load('bark_roughness.jpg' + v);
+
+        // Назначаем sRGB кодировку цветовым картам, чтобы они не выглядели блеклыми
+        woodFace.encoding = THREE.sRGBEncoding;
+        woodEnd.encoding = THREE.sRGBEncoding;
+        barkColor.encoding = THREE.sRGBEncoding;
         
-        // Настраиваем лицо
         woodFace.center.set(0.5, 0.5);
         woodFace.rotation = Math.PI / 2;
 
-        // Настраиваем торец
         woodEnd.center.set(0.5, 0.5);
         woodEnd.rotation = 0;
 
-        // Настраиваем кору (Важно: все 3 карты должны повторяться и поворачиваться одинаково!)
         const barkTextures = [barkColor, barkNormal, barkRoughness];
         barkTextures.forEach(tex => {
             tex.center.set(0.5, 0.5);
             tex.rotation = Math.PI / 2;
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(1, 15); // Если кора растянута - увеличь цифру, если мелкая - уменьши
+            tex.repeat.set(1, 15); 
         });
 
-        // СОЗДАЕМ МАТЕРИАЛЫ
         const faceMat = new THREE.MeshStandardMaterial({ 
             map: woodFace, 
             roughness: 0.7 
@@ -346,10 +326,10 @@
         
         const barkMat = new THREE.MeshStandardMaterial({ 
             map: barkColor, 
-            normalMap: barkNormal, // Вот эта штука дает 100% реалистичный рельеф коры!
-            normalScale: new THREE.Vector2(2, 2), // Сила рельефа (можно менять от 1 до 5)
+            normalMap: barkNormal, 
+            normalScale: new THREE.Vector2(3, 3), 
             roughnessMap: barkRoughness,
-            roughness: 1.0 // Кора абсолютно матовая, не бликует
+            roughness: 1.0 
         });
 
         const endMat = new THREE.MeshStandardMaterial({ 
@@ -358,22 +338,19 @@
             roughness: 0.9 
         });
 
-        // 6. Геометрия (Сетка оптимизирована, так как объем теперь в текстурах)
-        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 32, 4, 100);
+        // Увеличено количество сегментов по ширине (с 32 до 64) для плавных волн
+        const geometry = new THREE.BoxGeometry(1.2, 0.1, 4, 64, 4, 150);
         
         const pos = geometry.attributes.position;
         for(let i = 0; i < pos.count; i++) {
             let x = pos.getX(i);
+            let y = pos.getY(i);
             let z = pos.getZ(i);
             
-            if(Math.abs(x) > 0.55) {
-                // Создаем только плавные волны настоящего живого края (обзола)
-                let macroNoise = Math.sin(z * 5) * 0.02 + Math.cos(z * 12) * 0.01;
-                
-                // Делаем легкое утолщение к краю
-                let edgeThickness = (Math.abs(x) - 0.55) * 0.3; 
-                
-                pos.setX(i, x + Math.sign(x) * (macroNoise + edgeThickness));
+            // Расширена зона захвата краев (было > 0.55, стало > 0.45)
+            if(Math.abs(x) > 0.45) {
+                let macroNoise = Math.sin(z * 4) * 0.03 + Math.cos(z * 9) * 0.02;
+                pos.setX(i, x + Math.sign(x) * macroNoise);
             }
         }
         geometry.computeVertexNormals();
@@ -386,26 +363,21 @@
         
         boardGroup.add(board);
         
-        // 6. GSAP Анимация при скролле
-        // Настраиваем таймлайн, привязанный к скроллу всей страницы
         const tl = gsap.timeline({
             scrollTrigger: {
                 trigger: "body",
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 1 // Плавное следование за скроллом
+                scrub: 1 
             }
         });
 
-        // Секция 1 -> Секция 2 (Доска подлетает, поворачивается живым краем)
         tl.to(boardGroup.position, { x: -1.5, z: 2, ease: "power1.inOut" }, 0)
           .to(boardGroup.rotation, { x: 1.2, y: 0.5, z: -0.2, ease: "power1.inOut" }, 0);
 
-        // Секция 2 -> Секция 3 (Доска улетает наверх/вдаль)
         tl.to(boardGroup.position, { x: 0, y: 1, z: -2, ease: "power1.inOut" }, 0.5)
           .to(boardGroup.rotation, { x: 1.5, y: -0.5, z: 0.5, ease: "power1.inOut" }, 0.5);
 
-        // 7. Легкая анимация парения (Idle animation)
         gsap.to(boardGroup.position, {
             y: "+=0.1",
             duration: 2,
@@ -414,7 +386,6 @@
             ease: "sine.inOut"
         });
 
-        // 8. Рендер луп и адаптивность
         function animate() {
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
@@ -426,7 +397,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
     </script>
 </body>
 </html>
