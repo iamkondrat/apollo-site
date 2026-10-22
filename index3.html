@@ -180,7 +180,7 @@
     </style>
     <script>
         // Версия 3.0: Изменяй эту цифру для сброса кэша!
-        const APP_VERSION = "3.1"; 
+        const APP_VERSION = "3.2"; 
 
         window.addEventListener('load', () => {
             const checkUrl = window.location.href.split('?')[0] + '?t=' + new Date().getTime();
@@ -311,12 +311,16 @@
         woodEnd.center.set(0.5, 0.5);
         woodEnd.rotation = 0;
 
+        // Настраиваем кору
         const barkTextures = [barkColor, barkNormal, barkRoughness];
         barkTextures.forEach(tex => {
             tex.center.set(0.5, 0.5);
             tex.rotation = Math.PI / 2;
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-            tex.repeat.set(1, 15); 
+            
+            // ВОТ ТУТ МЕНЯЕМ ЦИФРЫ МЕСТАМИ:
+            // Теперь текстура повторится 15 раз в длину и 1 раз в толщину
+            tex.repeat.set(15, 1); 
         });
 
         // 4. Создание материалов
